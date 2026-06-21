@@ -1,0 +1,89 @@
+{
+  "products": {
+    "64gb": {
+      "price": 350,
+      "cost": 150,
+      "label": "64GB Flash",
+      "games_count": "6,500+",
+      "consoles": 28,
+      "description": "مثالية للبداية - أشهر الألعاب الكلاسيكية",
+      "games": {
+        "Windows": [
+          "Claw",
+          "Alaa Eldin",
+          "Lion King"
+        ]
+      }
+    },
+    "128gb": {
+      "price": 450,
+      "cost": 200,
+      "label": "128GB Flash",
+      "games_count": "12,500+",
+      "consoles": 45,
+      "description": "الأرشيف الكامل - كل شيء في مكان واحد",
+      "games": {
+        "Windows": [
+          "Claw",
+          "Alaa Eldin",
+          "Lion King"
+        ]
+      }
+    },
+    "custom": {
+      "label": "فلاشة شخصية",
+      "description": "بتبعتلنا فلاشتك وإحنا بنحط عليها الألعاب",
+      "sizes": {
+        "16gb": {
+          "price": 30,
+          "label": "16GB"
+        },
+        "32gb": {
+          "price": 50,
+          "label": "32GB"
+        },
+        "64gb": {
+          "price": 75,
+          "label": "64GB"
+        },
+        "128gb": {
+          "price": 100,
+          "label": "128GB"
+        }
+      }
+    }
+  },
+  "shipping": {
+    "القاهرة": 60,
+    "الجيزة": 60,
+    "الإسكندرية": 70,
+    "الشرقية": 55,
+    "الغربية": 60,
+    "المنوفية": 60,
+    "القليوبية": 60,
+    "الدقهلية": 65,
+    "كفر الشيخ": 70,
+    "البحيرة": 70,
+    "الفيوم": 70,
+    "بني سويف": 75,
+    "المنيا": 80,
+    "أسيوط": 85,
+    "سوهاج": 90,
+    "قنا": 90,
+    "الأقصر": 95,
+    "أسوان": 95,
+    "البحر الأحمر": 100,
+    "الوادي الجديد": 110,
+    "مطروح": 100,
+    "شمال سيناء": 100,
+    "جنوب سيناء": 110,
+    "بورسعيد": 75,
+    "الإسماعيلية": 70,
+    "السويس": 70,
+    "دمياط": 70
+  },
+  "whatsapp_number": "201556018222",
+  "instapay_link": "https://ipn.eg/S/mohammed.elahmady/instapay/1soctd",
+  "admin_password": "Ahmady",
+  "google_sheets_url": "https://script.google.com/macros/s/AKfycbwFB3_eNOKlptvxma327jCvEsjJ1Aous5yBVfdK5WdRGezrxnm4RStXW2SrWa0m9GKMRQ/exec"
+}

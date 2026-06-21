@@ -1,0 +1,12 @@
+{
+  "name": "zentrix",
+  "version": "1.0.0",
+  "description": "Zentrix - Retro Games USB Store",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
