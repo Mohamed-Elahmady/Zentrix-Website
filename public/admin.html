@@ -6,6 +6,7 @@
   <title>Zentrix — Admin Panel</title>
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&family=Cinzel:wght@700&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>.icon{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}.icon svg{display:block}</style>
   <style>
     :root {
       --navy: #0d1b2e; --navy-mid: #152238; --navy-light: #1e3250;
@@ -280,19 +281,156 @@
       .admin-card.full { grid-column: auto; }
       .custom-price-grid { grid-template-columns: 1fr 1fr; }
     }
+
+    /* FIN TABS (Expenses / Income switcher) */
+    .fin-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .fin-tab {
+      flex: 1;
+      padding: 9px 16px;
+      border-radius: 9px;
+      border: 1px solid rgba(255,255,255,.1);
+      background: rgba(255,255,255,.02);
+      color: var(--grey);
+      font-family: 'Tajawal', sans-serif;
+      font-size: .9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .22s;
+    }
+    .fin-tab:hover {
+      background: rgba(255,255,255,.04);
+      color: var(--white);
+    }
+    .fin-tab.active {
+      background: linear-gradient(135deg, rgba(201,168,76,.18), rgba(201,168,76,.05));
+      border-color: var(--gold);
+      color: var(--gold);
+    }
+    #finTab-income.active {
+      background: linear-gradient(135deg, rgba(39,174,96,.18), rgba(39,174,96,.05));
+      border-color: var(--success);
+      color: var(--success);
+    }
+    .fin-panel { display: none; }
+    .fin-panel.active { display: block; animation: tabFadeIn .25s ease; }
   </style>
 </head>
 <body>
 
+<!-- SVG Sprite -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+  <symbol id="ai-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="11" width="18" height="11" rx="2"/>
+    <path d="M7 11V7a5 5 0 0110 0v4"/>
+  </symbol>
+  <symbol id="ai-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="18" y1="20" x2="18" y2="10"/>
+    <line x1="12" y1="20" x2="12" y2="4"/>
+    <line x1="6" y1="20" x2="6" y2="14"/>
+    <line x1="2" y1="20" x2="22" y2="20"/>
+  </symbol>
+  <symbol id="ai-money" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="2" y="6" width="20" height="12" rx="2"/>
+    <circle cx="12" cy="12" r="2.5"/>
+    <path d="M17 12h.01M7 12h.01"/>
+  </symbol>
+  <symbol id="ai-gamepad" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="2" y="6" width="20" height="12" rx="2"/>
+    <path d="M6 12h4M8 10v4"/>
+    <circle cx="16" cy="11" r="1" fill="currentColor" stroke="none"/>
+    <circle cx="18" cy="13" r="1" fill="currentColor" stroke="none"/>
+  </symbol>
+  <symbol id="ai-truck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="1" y="3" width="15" height="13" rx="1"/>
+    <path d="M16 8h4l3 5v4h-7V8z"/>
+    <circle cx="5.5" cy="18.5" r="2.5"/>
+    <circle cx="18.5" cy="18.5" r="2.5"/>
+  </symbol>
+  <symbol id="ai-phone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="5" y="2" width="14" height="20" rx="2"/>
+    <line x1="12" y1="18" x2="12.01" y2="18"/>
+  </symbol>
+  <symbol id="ai-logout" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
+    <polyline points="16 17 21 12 16 7"/>
+    <line x1="21" y1="12" x2="9" y2="12"/>
+  </symbol>
+  <symbol id="ai-save" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
+    <polyline points="17 21 17 13 7 13 7 21"/>
+    <polyline points="7 3 7 8 15 8"/>
+  </symbol>
+  <symbol id="ai-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+    <line x1="12" y1="5" x2="12" y2="19"/>
+    <line x1="5" y1="12" x2="19" y2="12"/>
+  </symbol>
+  <symbol id="ai-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="20 6 9 17 4 12"/>
+  </symbol>
+  <symbol id="ai-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+    <line x1="18" y1="6" x2="6" y2="18"/>
+    <line x1="6" y1="6" x2="18" y2="18"/>
+  </symbol>
+  <symbol id="ai-trending-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+    <polyline points="17 6 23 6 23 12"/>
+  </symbol>
+  <symbol id="ai-trending-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/>
+    <polyline points="17 18 23 18 23 12"/>
+  </symbol>
+  <symbol id="ai-wallet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M20 12V8a2 2 0 00-2-2H4a2 2 0 00-2 2v8a2 2 0 002 2h14a2 2 0 002-2v-4"/>
+    <path d="M20 12h-4a2 2 0 000 4h4"/>
+  </symbol>
+  <symbol id="ai-expense" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="12" y1="1" x2="12" y2="23"/>
+    <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
+  </symbol>
+  <symbol id="ai-cart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="9" cy="21" r="1"/>
+    <circle cx="20" cy="21" r="1"/>
+    <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 001.98-1.67l1.62-9.33H6"/>
+  </symbol>
+  <symbol id="ai-folder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/>
+  </symbol>
+  <symbol id="ai-chat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+  </symbol>
+  <symbol id="ai-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="3 6 5 6 21 6"/>
+    <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
+  </symbol>
+  <symbol id="ai-envelope" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+    <polyline points="22,6 12,13 2,6"/>
+  </symbol>
+  <symbol id="ai-joystick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 2a4 4 0 014 4v6H8V6a4 4 0 014-4z"/>
+    <path d="M8 12l-3 8h14l-3-8"/>
+    <line x1="12" y1="2" x2="12" y2="6"/>
+  </symbol>
+</svg>
+
 <!-- LOGIN -->
 <div class="login-screen" id="loginScreen">
   <div class="login-box">
-    <div class="login-icon">🔐</div>
+    <div class="login-icon">
+      <svg width="48" height="48" style="color:var(--gold)"><use href="#ai-lock" stroke="currentColor"/></svg>
+    </div>
     <div class="login-title">Admin Panel</div>
     <div class="login-sub">Zentrix — الإدارة والإعدادات</div>
     <input type="password" id="passInput" placeholder="كلمة السر" onkeydown="if(event.key==='Enter')doLogin()" />
     <button class="btn-login" onclick="doLogin()">دخول</button>
-    <div class="login-err" id="loginErr">❌ كلمة السر غلط</div>
+    <div class="login-err" id="loginErr" style="display:flex;align-items:center;gap:6px;justify-content:center;">
+      <svg width="15" height="15" style="color:var(--danger)"><use href="#ai-x" stroke="currentColor"/></svg>
+      كلمة السر غلط
+    </div>
   </div>
 </div>
 
@@ -300,18 +438,31 @@
 <div class="dashboard" id="dashboard">
   <div class="admin-header">
     <div class="admin-logo">ZENTRIX <span>ADMIN PANEL</span></div>
-    <button class="btn-logout" onclick="logout()">خروج</button>
+    <button class="btn-logout" onclick="logout()" style="display:flex;align-items:center;gap:6px;">
+      <svg width="15" height="15"><use href="#ai-logout" stroke="currentColor"/></svg>
+      خروج
+    </button>
   </div>
 
   <div class="admin-body">
 
     <!-- Dashboard Tabs Navigation -->
     <div class="dashboard-tabs">
-      <button class="dashboard-tab active" data-tab="overview" onclick="switchDashboardTab('overview')">📊 لوحة البيانات</button>
-      <button class="dashboard-tab" data-tab="prices" onclick="switchDashboardTab('prices')">💰 الأسعار</button>
-      <button class="dashboard-tab" data-tab="games" onclick="switchDashboardTab('games')">🎮 الألعاب</button>
-      <button class="dashboard-tab" data-tab="shipping" onclick="switchDashboardTab('shipping')">🚚 أسعار الشحن</button>
-      <button class="dashboard-tab" data-tab="contact" onclick="switchDashboardTab('contact')">📲 بيانات التواصل</button>
+      <button class="dashboard-tab active" data-tab="overview" onclick="switchDashboardTab('overview')">
+        <svg width="15" height="15"><use href="#ai-chart" stroke="currentColor"/></svg> لوحة البيانات
+      </button>
+      <button class="dashboard-tab" data-tab="prices" onclick="switchDashboardTab('prices')">
+        <svg width="15" height="15"><use href="#ai-money" stroke="currentColor"/></svg> الأسعار
+      </button>
+      <button class="dashboard-tab" data-tab="games" onclick="switchDashboardTab('games')">
+        <svg width="15" height="15"><use href="#ai-gamepad" stroke="currentColor"/></svg> الألعاب
+      </button>
+      <button class="dashboard-tab" data-tab="shipping" onclick="switchDashboardTab('shipping')">
+        <svg width="15" height="15"><use href="#ai-truck" stroke="currentColor"/></svg> أسعار الشحن
+      </button>
+      <button class="dashboard-tab" data-tab="contact" onclick="switchDashboardTab('contact')">
+        <svg width="15" height="15"><use href="#ai-phone" stroke="currentColor"/></svg> بيانات التواصل
+      </button>
     </div>
 
     <!-- TAB 0: OVERVIEW -->
@@ -320,7 +471,9 @@
       <div class="stats-row">
         <!-- 1. إجمالي الإيرادات بالشحن (أزرق) -->
         <div class="stats-card">
-          <div class="stats-card-icon" style="color: var(--blue);">🚚</div>
+          <div class="stats-card-icon" style="color: var(--blue);">
+            <svg width="28" height="28"><use href="#ai-truck" stroke="currentColor"/></svg>
+          </div>
           <div class="stats-card-info">
             <div class="stats-card-label">إجمالي الإيرادات بالشحن</div>
             <div class="stats-card-value" id="stat-income-with-shipping" style="color: var(--blue);">0 EGP</div>
@@ -328,7 +481,9 @@
         </div>
         <!-- 2. إجمالي الإيرادات (أصفر) -->
         <div class="stats-card">
-          <div class="stats-card-icon" style="color: var(--gold);">💰</div>
+          <div class="stats-card-icon" style="color: var(--gold);">
+            <svg width="28" height="28"><use href="#ai-money" stroke="currentColor"/></svg>
+          </div>
           <div class="stats-card-info">
             <div class="stats-card-label">إجمالي الإيرادات</div>
             <div class="stats-card-value" id="stat-income" style="color: var(--white);">0 EGP</div>
@@ -336,7 +491,9 @@
         </div>
         <!-- 3. صافي الأرباح (أخضر) -->
         <div class="stats-card">
-          <div class="stats-card-icon" id="stat-profit-icon" style="color: var(--success);">📈</div>
+          <div class="stats-card-icon" id="stat-profit-icon" style="color: var(--success);">
+            <svg width="28" height="28" id="stat-profit-svg"><use href="#ai-trending-up" stroke="currentColor"/></svg>
+          </div>
           <div class="stats-card-info">
             <div class="stats-card-label">صافي الأرباح</div>
             <div class="stats-card-value" id="stat-profit" style="color: var(--success);">0 EGP</div>
@@ -344,7 +501,9 @@
         </div>
         <!-- 4. الفلوس اللي معايا (بنفسجي) -->
         <div class="stats-card" style="border-color: rgba(124,58,237,.25);">
-          <div class="stats-card-icon" style="color: var(--purple-light);">💳</div>
+          <div class="stats-card-icon" style="color: var(--purple-light);">
+            <svg width="28" height="28"><use href="#ai-wallet" stroke="currentColor"/></svg>
+          </div>
           <div class="stats-card-info">
             <div class="stats-card-label">الفلوس اللي معايا</div>
             <div class="stats-card-value" id="stat-cash" style="color: var(--purple-light);">0 EGP</div>
@@ -352,7 +511,9 @@
         </div>
         <!-- 5. إجمالي المصاريف (أحمر) -->
         <div class="stats-card">
-          <div class="stats-card-icon" style="color: var(--danger);">💸</div>
+          <div class="stats-card-icon" style="color: var(--danger);">
+            <svg width="28" height="28"><use href="#ai-expense" stroke="currentColor"/></svg>
+          </div>
           <div class="stats-card-info">
             <div class="stats-card-label">إجمالي المصاريف</div>
             <div class="stats-card-value" id="stat-expenses" style="color: var(--danger);">0 EGP</div>
@@ -365,7 +526,9 @@
         <!-- Diagram Card -->
         <div class="admin-card chart-card">
           <div class="card-head">
-            <div class="card-head-icon">📊</div>
+            <div class="card-head-icon">
+              <svg width="20" height="20" style="color:var(--gold)"><use href="#ai-chart" stroke="currentColor"/></svg>
+            </div>
             <div>
               <div class="card-head-title">التقرير المالي</div>
               <div class="card-head-sub">الإيرادات مقابل المصاريف</div>
@@ -376,42 +539,90 @@
           </div>
         </div>
 
-        <!-- Expenses Editor Card -->
+        <!-- Expenses & Income Editor Card -->
         <div class="admin-card">
           <div class="card-head">
-            <div class="card-head-icon">💸</div>
+            <div class="card-head-icon">
+              <svg width="20" height="20" style="color:var(--danger)"><use href="#ai-expense" stroke="currentColor"/></svg>
+            </div>
             <div>
-              <div class="card-head-title">محرر المصاريف</div>
-              <div class="card-head-sub">إضافة وتتبع المصاريف الإضافية</div>
+              <div class="card-head-title">محرر المصاريف والإيرادات</div>
+              <div class="card-head-sub">تتبع المصاريف ورأس المال</div>
             </div>
           </div>
-          <!-- Add Expense Form -->
-          <div class="add-expense-form">
-            <div class="field">
-              <label>المبلغ (جنيه)</label>
-              <input type="number" id="expAmount" placeholder="مثال: 150" />
-            </div>
-            <div class="field">
-              <label>سبب الصرف</label>
-              <input type="text" id="expReason" placeholder="مثال: إعلانات ممولة / شحن فلاشات" />
-            </div>
-            <button class="btn-save" style="margin-top: 4px;" onclick="addExpense()">➕ إضافة مصروف جديد</button>
+
+          <!-- Switch Tabs -->
+          <div class="fin-tabs">
+            <button class="fin-tab active" id="finTab-expenses" onclick="switchFinTab('expenses')" style="display:flex;align-items:center;justify-content:center;gap:6px;">
+              <svg width="14" height="14"><use href="#ai-expense" stroke="currentColor"/></svg> مصاريف
+            </button>
+            <button class="fin-tab" id="finTab-income" onclick="switchFinTab('income')" style="display:flex;align-items:center;justify-content:center;gap:6px;">
+              <svg width="14" height="14"><use href="#ai-money" stroke="currentColor"/></svg> إيرادات / رأس مال
+            </button>
           </div>
-          <!-- Expenses List -->
-          <div class="expenses-list-container">
-            <table class="admin-table mini">
-              <thead>
-                <tr>
-                  <th>السبب</th>
-                  <th>المبلغ</th>
-                  <th>التاريخ</th>
-                  <th>إجراء</th>
-                </tr>
-              </thead>
-              <tbody id="expensesTableBody">
-                <!-- Expenses will be rendered here -->
-              </tbody>
-            </table>
+
+          <!-- Expenses Panel -->
+          <div id="finPanel-expenses" class="fin-panel active">
+            <div class="add-expense-form">
+              <div class="field">
+                <label>المبلغ (جنيه)</label>
+                <input type="number" id="expAmount" placeholder="مثال: 150" />
+              </div>
+              <div class="field">
+                <label>سبب الصرف</label>
+                <input type="text" id="expReason" placeholder="مثال: إعلانات ممولة / شحن فلاشات" />
+              </div>
+              <button class="btn-save" style="margin-top: 4px;display:flex;align-items:center;justify-content:center;gap:6px;" onclick="addExpense()">
+                <svg width="14" height="14"><use href="#ai-plus" stroke="white"/></svg> إضافة مصروف جديد
+              </button>
+            </div>
+            <div class="expenses-list-container">
+              <table class="admin-table mini">
+                <thead>
+                  <tr>
+                    <th>السبب</th>
+                    <th>المبلغ</th>
+                    <th>التاريخ</th>
+                    <th>إجراء</th>
+                  </tr>
+                </thead>
+                <tbody id="expensesTableBody">
+                  <!-- Expenses will be rendered here -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Income Panel -->
+          <div id="finPanel-income" class="fin-panel">
+            <div class="add-expense-form" style="border-color: rgba(39,174,96,.25); background: rgba(39,174,96,.05);">
+              <div class="field">
+                <label>المبلغ (جنيه)</label>
+                <input type="number" id="incAmount" placeholder="مثال: 5000" />
+              </div>
+              <div class="field">
+                <label>المصدر / السبب</label>
+                <input type="text" id="incSource" placeholder="مثال: رأس المال الابتدائي / تمويل إضافي" />
+              </div>
+              <button class="btn-save" style="margin-top: 4px; background: linear-gradient(135deg,#27ae60,#1e8449);display:flex;align-items:center;justify-content:center;gap:6px;" onclick="addIncome()">
+                <svg width="14" height="14"><use href="#ai-plus" stroke="white"/></svg> إضافة إيراد / رأس مال
+              </button>
+            </div>
+            <div class="expenses-list-container">
+              <table class="admin-table mini">
+                <thead>
+                  <tr>
+                    <th>المصدر</th>
+                    <th>المبلغ</th>
+                    <th>التاريخ</th>
+                    <th>إجراء</th>
+                  </tr>
+                </thead>
+                <tbody id="incomeTableBody">
+                  <!-- Income will be rendered here -->
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
@@ -420,7 +631,9 @@
       <div class="admin-card full" style="margin-top: 24px;">
         <div class="card-head" style="justify-content: space-between;">
           <div style="display: flex; align-items: center; gap: 10px;">
-            <div class="card-head-icon">🛒</div>
+            <div class="card-head-icon">
+              <svg width="20" height="20" style="color:var(--gold)"><use href="#ai-cart" stroke="currentColor"/></svg>
+            </div>
             <div>
               <div class="card-head-title">سجل المبيعات والطلبات</div>
               <div class="card-head-sub">إجمالي الطلبات المسجلة في النظام</div>
@@ -438,8 +651,8 @@
                 <th>المحافظة والمدينة</th>
                 <th>المنتج</th>
                 <th>المبلغ الإجمالي</th>
-                <th>دفع الشحن 🚚</th>
-                <th>دفع المنتج 💰</th>
+                <th style="display:flex;align-items:center;gap:5px;white-space:nowrap;"><svg width="13" height="13" style="flex-shrink:0"><use href="#ai-truck" stroke="currentColor"/></svg> دفع الشحن</th>
+                <th>دفع المنتج</th>
               </tr>
             </thead>
             <tbody id="ordersTableBody">
@@ -456,7 +669,9 @@
         <!-- Standard Prices -->
         <div class="admin-card">
           <div class="card-head">
-            <div class="card-head-icon">💰</div>
+            <div class="card-head-icon">
+              <svg width="20" height="20" style="color:var(--gold)"><use href="#ai-money" stroke="currentColor"/></svg>
+            </div>
             <div>
               <div class="card-head-title">أسعار الفلاشات الجاهزة</div>
               <div class="card-head-sub">64GB و 128GB</div>
@@ -478,13 +693,17 @@
             <label>سعر بيع الفلاشة 128 (جنيه)</label>
             <input type="number" id="price128" placeholder="مثال: 550" />
           </div>
-          <button class="btn-save" onclick="savePrices()">💾 حفظ الأسعار</button>
+          <button class="btn-save" onclick="savePrices()" style="display:flex;align-items:center;justify-content:center;gap:6px;">
+            <svg width="14" height="14"><use href="#ai-save" stroke="var(--navy)"/></svg> حفظ الأسعار
+          </button>
         </div>
 
         <!-- Custom Flash Prices -->
         <div class="admin-card purple-card">
           <div class="card-head">
-            <div class="card-head-icon">✉️</div>
+            <div class="card-head-icon">
+              <svg width="20" height="20" style="color:var(--purple-light)"><use href="#ai-envelope" stroke="currentColor"/></svg>
+            </div>
             <div>
               <div class="card-head-title purple">أسعار الفلاشة الشخصية (Custom)</div>
               <div class="card-head-sub">سعر حسب حجم الفلاشة اللي بيبعتها العميل</div>
@@ -508,7 +727,9 @@
               <input type="number" id="customPrice128" placeholder="مثال: 350" />
             </div>
           </div>
-          <button class="btn-save purple" onclick="saveCustomPrices()">💾 حفظ أسعار Custom Flash</button>
+          <button class="btn-save purple" onclick="saveCustomPrices()" style="display:flex;align-items:center;justify-content:center;gap:6px;">
+            <svg width="14" height="14"><use href="#ai-save" stroke="white"/></svg> حفظ أسعار Custom Flash
+          </button>
         </div>
       </div>
     </div>
@@ -517,7 +738,9 @@
     <div class="tab-content" id="tab-content-games">
       <div class="admin-card full">
         <div class="card-head">
-          <div class="card-head-icon">🎮</div>
+          <div class="card-head-icon">
+            <svg width="20" height="20" style="color:var(--gold)"><use href="#ai-gamepad" stroke="currentColor"/></svg>
+          </div>
           <div>
             <div class="card-head-title">ألعاب الباقات</div>
             <div class="card-head-sub">عدّل الألعاب الموجودة في كل Package</div>
@@ -525,8 +748,12 @@
         </div>
 
         <div class="games-editor-tabs">
-          <button class="games-tab active" onclick="switchGamesTab('64gb')">🗂 فلاشة 64GB</button>
-          <button class="games-tab" onclick="switchGamesTab('128gb')">🗂 فلاشة 128GB</button>
+          <button class="games-tab active" onclick="switchGamesTab('64gb')" style="display:flex;align-items:center;gap:6px;">
+            <svg width="13" height="13"><use href="#ai-folder" stroke="currentColor"/></svg> فلاشة 64GB
+          </button>
+          <button class="games-tab" onclick="switchGamesTab('128gb')" style="display:flex;align-items:center;gap:6px;">
+            <svg width="13" height="13"><use href="#ai-folder" stroke="currentColor"/></svg> فلاشة 128GB
+          </button>
         </div>
 
         <div class="games-panel active" id="gamesPanel-64gb"></div>
@@ -536,7 +763,9 @@
           <input type="text" id="newConsoleName" placeholder="اسم الجهاز الجديد (مثال: Sega Saturn)" />
           <button class="btn-add-console" onclick="addConsole()">+ إضافة جهاز</button>
         </div>
-        <button class="btn-save" style="margin-top:16px;" onclick="saveGames()">💾 حفظ الألعاب</button>
+        <button class="btn-save" style="margin-top:16px;display:flex;align-items:center;justify-content:center;gap:6px;" onclick="saveGames()">
+          <svg width="14" height="14"><use href="#ai-save" stroke="var(--navy)"/></svg> حفظ الألعاب
+        </button>
       </div>
     </div>
 
@@ -544,14 +773,18 @@
     <div class="tab-content" id="tab-content-shipping">
       <div class="admin-card full">
         <div class="card-head">
-          <div class="card-head-icon">🚚</div>
+          <div class="card-head-icon">
+            <svg width="20" height="20" style="color:var(--gold)"><use href="#ai-truck" stroke="currentColor"/></svg>
+          </div>
           <div>
             <div class="card-head-title">أسعار الشحن لكل محافظة</div>
             <div class="card-head-sub">عدّل السعر وإضغط حفظ</div>
           </div>
         </div>
         <div class="ship-grid" id="shipGrid"></div>
-        <button class="btn-save" style="margin-top:20px;" onclick="saveShipping()">💾 حفظ أسعار الشحن</button>
+        <button class="btn-save" style="margin-top:20px;display:flex;align-items:center;justify-content:center;gap:6px;" onclick="saveShipping()">
+          <svg width="14" height="14"><use href="#ai-save" stroke="var(--navy)"/></svg> حفظ أسعار الشحن
+        </button>
       </div>
     </div>
 
@@ -559,7 +792,9 @@
     <div class="tab-content" id="tab-content-contact">
       <div class="admin-card" style="max-width: 650px; margin: 0 auto;">
         <div class="card-head">
-          <div class="card-head-icon">📲</div>
+          <div class="card-head-icon">
+            <svg width="20" height="20" style="color:var(--gold)"><use href="#ai-phone" stroke="currentColor"/></svg>
+          </div>
           <div>
             <div class="card-head-title">بيانات التواصل</div>
             <div class="card-head-sub">واتساب، Instapay، Google Sheets</div>
@@ -577,7 +812,9 @@
           <label>Google Sheets Web App URL</label>
           <input type="text" id="sheetsUrl" placeholder="https://script.google.com/macros/s/..." />
         </div>
-        <button class="btn-save" onclick="saveContact()">💾 حفظ البيانات</button>
+        <button class="btn-save" onclick="saveContact()" style="display:flex;align-items:center;justify-content:center;gap:6px;">
+          <svg width="14" height="14"><use href="#ai-save" stroke="var(--navy)"/></svg> حفظ البيانات
+        </button>
       </div>
     </div>
 
@@ -587,37 +824,35 @@
 <div class="toast" id="toast"></div>
 
 <script>
-let adminPass = '';
+let adminToken = '';  // JWT token stored in memory only (not localStorage)
 let fullSettings = null;
 let activeGamesTab = '64gb';
 
 async function doLogin() {
   const pass = document.getElementById('passInput').value;
-  const err = document.getElementById('loginErr');
+  const errEl = document.getElementById('loginErr');
   try {
     const res = await fetch('/api/admin/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ password: pass })
     });
-    if (res.ok) {
-      adminPass = pass;
-      localStorage.setItem('adminPassword', pass);
-      err.style.display = 'none';
+    const data = await res.json();
+    if (res.ok && data.token) {
+      adminToken = data.token;  // keep token in memory only — never in localStorage
+      errEl.style.display = 'none';
+      errEl.textContent = 'كلمة السر غلط';
       await loadAdminSettings();
       document.getElementById('loginScreen').style.display = 'none';
       document.getElementById('dashboard').style.display = 'block';
-      
-      // Load saved tab or default to 'overview'
       const savedTab = localStorage.getItem('activeDashboardTab') || 'overview';
       switchDashboardTab(savedTab);
     } else {
-      localStorage.removeItem('adminPassword');
-      err.style.display = 'block';
+      errEl.textContent = data.error || 'كلمة السر غلط';
+      errEl.style.display = 'block';
     }
-  } catch(e) { 
-    localStorage.removeItem('adminPassword');
-    err.style.display = 'block'; 
+  } catch(e) {
+    errEl.style.display = 'block';
   }
 }
 
@@ -642,24 +877,19 @@ function switchDashboardTab(tabId) {
 }
 
 function logout() {
-  adminPass = '';
-  localStorage.removeItem('adminPassword');
+  adminToken = '';  // wipe token from memory
   document.getElementById('loginScreen').style.display = 'flex';
   document.getElementById('dashboard').style.display = 'none';
   document.getElementById('passInput').value = '';
 }
 
-// Auto login if password is saved in localStorage
+// No auto-login — token lives in memory only
 window.addEventListener('DOMContentLoaded', () => {
-  const savedPass = localStorage.getItem('adminPassword');
-  if (savedPass) {
-    document.getElementById('passInput').value = savedPass;
-    doLogin();
-  }
+  // Nothing to restore — token is session-only
 });
 
 async function loadAdminSettings() {
-  const res = await fetch('/api/admin/settings', { headers: { password: adminPass } });
+  const res = await fetch('/api/admin/settings', { headers: { 'x-admin-token': adminToken } });
   fullSettings = await res.json();
 
   // Standard prices
@@ -711,7 +941,7 @@ function renderConsoleEditor(key, consoleName, gamesList) {
   return `
     <div class="console-editor" id="ce-${key}-${safeId}" data-key="${key}" data-console="${consoleName}">
       <div class="console-editor-header">
-        <div class="console-editor-name">🕹 ${consoleName}</div>
+        <div class="console-editor-name" style="display:flex;align-items:center;gap:6px;"><svg width='14' height='14'><use href='#ai-joystick' stroke='currentColor'/></svg>${consoleName}</div>
         <button class="btn-remove-console" onclick="removeConsole('${key}','${consoleName}')">حذف</button>
       </div>
       <textarea id="games-${key}-${safeId}" placeholder="كل لعبة في سطر...">${gamesList.join('\n')}</textarea>
@@ -739,7 +969,7 @@ function addConsole() {
   panel.appendChild(tempDiv.firstElementChild);
 
   nameInput.value = '';
-  showToast('✅ تمت الإضافة — اضغط حفظ لتأكيدها');
+  showToast('تمت الإضافة — اضغط حفظ لتأكيدها');
 }
 
 function removeConsole(key, consoleName) {
@@ -774,7 +1004,7 @@ async function savePrices() {
   };
   const res = await fetch('/api/admin/settings', {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json', password: adminPass },
+    headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken },
     body: JSON.stringify(body)
   });
   if (res.ok) {
@@ -786,7 +1016,7 @@ async function savePrices() {
       fullSettings.products['128gb'].price = Number(body.price_128gb);
       fullSettings.products['128gb'].cost = Number(body.cost_128gb);
     }
-    showToast('✅ تم حفظ الأسعار');
+    showToast('تم حفظ الأسعار');
     await loadDashboardData();
   } else {
     showToast('❌ فيه مشكلة', true);
@@ -802,10 +1032,10 @@ async function saveCustomPrices() {
   };
   const res = await fetch('/api/admin/settings', {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json', password: adminPass },
+    headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken },
     body: JSON.stringify(body)
   });
-  showToast(res.ok ? '✅ تم حفظ أسعار Custom Flash' : '❌ فيه مشكلة', !res.ok);
+  showToast(res.ok ? 'تم حفظ أسعار Custom Flash' : 'فيه مشكلة', !res.ok);
 }
 
 async function saveContact() {
@@ -816,10 +1046,10 @@ async function saveContact() {
   };
   const res = await fetch('/api/admin/settings', {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json', password: adminPass },
+    headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken },
     body: JSON.stringify(body)
   });
-  showToast(res.ok ? '✅ تم حفظ البيانات' : '❌ فيه مشكلة', !res.ok);
+  showToast(res.ok ? 'تم حفظ البيانات' : 'فيه مشكلة', !res.ok);
 }
 
 async function saveGames() {
@@ -828,16 +1058,16 @@ async function saveGames() {
   const body = { games_64gb, games_128gb };
   const res = await fetch('/api/admin/settings', {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json', password: adminPass },
+    headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken },
     body: JSON.stringify(body)
   });
   if (res.ok) {
     // Update local state
     fullSettings.products['64gb'].games  = games_64gb;
     fullSettings.products['128gb'].games = games_128gb;
-    showToast('✅ تم حفظ الألعاب');
+    showToast('تم حفظ الألعاب');
   } else {
-    showToast('❌ فيه مشكلة', true);
+    showToast('فيه مشكلة', true);
   }
 }
 
@@ -849,15 +1079,18 @@ async function saveShipping() {
   });
   const res = await fetch('/api/admin/shipping', {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json', password: adminPass },
+    headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken },
     body: JSON.stringify({ shipping })
   });
-  showToast(res.ok ? '✅ تم حفظ الشحن' : '❌ فيه مشكلة', !res.ok);
+  showToast(res.ok ? 'تم حفظ الشحن' : 'فيه مشكلة', !res.ok);
 }
 
 function showToast(msg, isErr = false) {
   const t = document.getElementById('toast');
-  t.textContent = msg;
+  const icon = isErr
+    ? `<svg width="14" height="14" style="flex-shrink:0"><use href="#ai-x" stroke="white"/></svg>`
+    : `<svg width="14" height="14" style="flex-shrink:0"><use href="#ai-check" stroke="white"/></svg>`;
+  t.innerHTML = `<span style="display:flex;align-items:center;gap:7px;">${icon}${msg}</span>`;
   t.className = 'toast show' + (isErr ? ' err' : '');
   setTimeout(() => t.className = 'toast', 2800);
 }
@@ -865,16 +1098,19 @@ function showToast(msg, isErr = false) {
 // ── DASHBOARD LOGIC ──────────────────────────────────────────────────────────
 let ordersList = [];
 let expensesList = [];
+let incomeList = [];
 let financeChart = null;
 
 async function loadDashboardData() {
   try {
-    const [ordersRes, expensesRes] = await Promise.all([
-      fetch('/api/admin/orders', { headers: { password: adminPass } }),
-      fetch('/api/admin/expenses', { headers: { password: adminPass } })
+    const [ordersRes, expensesRes, incomeRes] = await Promise.all([
+      fetch('/api/admin/orders',  { headers: { 'x-admin-token': adminToken } }),
+      fetch('/api/admin/expenses',{ headers: { 'x-admin-token': adminToken } }),
+      fetch('/api/admin/income',  { headers: { 'x-admin-token': adminToken } })
     ]);
-    ordersList = await ordersRes.json();
+    ordersList   = await ordersRes.json();
     expensesList = await expensesRes.json();
+    incomeList   = await incomeRes.json();
     
     updateDashboardUI();
   } catch(e) {
@@ -884,12 +1120,12 @@ async function loadDashboardData() {
 
 function updateDashboardUI() {
   // 1. Calculate stats
-  let totalIncome = 0; // product revenue only
+  let totalSalesIncome = 0; // product revenue from orders
   let totalShipping = 0;
   let totalCostOfGoods = 0;
   ordersList.forEach(order => {
     if (order.product_paid) {
-      totalIncome += Number(order.product_price || 0);
+      totalSalesIncome += Number(order.product_price || 0);
       const isNewFlash = (order.flash_type === 'New' || !order.is_personal_flash);
       if (isNewFlash && order.product) {
         if (order.product.includes('64GB')) {
@@ -902,16 +1138,21 @@ function updateDashboardUI() {
     if (order.shipping_paid) totalShipping += Number(order.shipping_cost || 0);
   });
   
+  // Manual income (capital / funding)
+  let totalManualIncome = 0;
+  incomeList.forEach(inc => { totalManualIncome += Number(inc.amount || 0); });
+
   let totalExpenses = 0;
   expensesList.forEach(exp => {
     totalExpenses += Number(exp.amount || 0);
   });
+
+  const totalIncome = totalSalesIncome; // used in stats cards (products revenue)
+  const netProfit = totalSalesIncome - totalCostOfGoods - totalExpenses;
+  const totalIncomeWithShipping = totalSalesIncome + totalShipping;
   
-  const netProfit = totalIncome - totalCostOfGoods - totalExpenses;
-  const totalIncomeWithShipping = totalIncome + totalShipping;
-  
-  // cash on hand = total income (products) - total expenses
-  const cashOnHand = totalIncome - totalExpenses;
+  // cash on hand = sales income + manual income - expenses
+  const cashOnHand = totalSalesIncome + totalManualIncome - totalExpenses;
 
   // Update stats cards
   document.getElementById('stat-income').textContent = 'EGP ' + totalIncome.toLocaleString('en-US');
@@ -925,14 +1166,15 @@ function updateDashboardUI() {
   const profitValEl = document.getElementById('stat-profit');
   const profitIconEl = document.getElementById('stat-profit-icon');
   profitValEl.textContent = 'EGP ' + netProfit.toLocaleString('en-US');
+  const profitSvg = document.getElementById('stat-profit-svg');
   if (netProfit >= 0) {
     profitValEl.style.color = 'var(--success)';
     profitIconEl.style.color = 'var(--success)';
-    profitIconEl.textContent = '📈';
+    if (profitSvg) profitSvg.innerHTML = '<use href="#ai-trending-up" stroke="currentColor"/>';
   } else {
     profitValEl.style.color = 'var(--danger)';
     profitIconEl.style.color = 'var(--danger)';
-    profitIconEl.textContent = '📉';
+    if (profitSvg) profitSvg.innerHTML = '<use href="#ai-trending-down" stroke="currentColor"/>';
   }
   
   // 2. Render orders table
@@ -949,7 +1191,7 @@ function updateDashboardUI() {
           <td>
             <div style="font-weight: 500;">${o.name}</div>
             <div style="font-size: 0.75rem; color: var(--grey); margin-top:2px;">
-              <a href="https://wa.me/${o.whatsapp}" target="_blank" style="color: var(--success); text-decoration: none;">💬 ${o.phone}</a>
+              <a href="https://wa.me/${o.whatsapp}" target="_blank" style="color: var(--success); text-decoration: none; display:inline-flex; align-items:center; gap:4px;"><svg width='12' height='12'><use href='#ai-chat' stroke='currentColor'/></svg>${o.phone}</a>
             </div>
           </td>
           <td>${o.governorate} — ${o.city}<div style="font-size:0.75rem; color: var(--grey); margin-top:2px;">${o.address}</div></td>
@@ -987,6 +1229,25 @@ function updateDashboardUI() {
       `;
     }).join('');
   }
+
+  // 3b. Render income table
+  const incomeTbody = document.getElementById('incomeTableBody');
+  if (incomeList.length === 0) {
+    incomeTbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--grey); padding: 15px;">لا توجد إيرادات مسجلة</td></tr>`;
+  } else {
+    incomeTbody.innerHTML = incomeList.map(i => {
+      return `
+        <tr>
+          <td>${i.source}</td>
+          <td style="font-weight: bold; color: var(--success);">EGP ${Number(i.amount || 0).toLocaleString('en-US')}</td>
+          <td style="font-size: 0.75rem; color: var(--grey);">${i.timestamp.split(',')[0]}</td>
+          <td style="text-align: center;">
+            <button class="btn-action" onclick="deleteIncome('${i.id}')">حذف</button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
   
   // 4. Update Chart
   const ctx = document.getElementById('financeChart').getContext('2d');
@@ -996,23 +1257,25 @@ function updateDashboardUI() {
   financeChart = new Chart(ctx, {
     type: 'doughnut',
     data: {
-      labels: ['إجمالي الإيرادات بالشحن', 'إجمالي الإيرادات', 'صافي الأرباح', 'إجمالي المصاريف', 'الفلوس اللي معايا'],
+      labels: ['إجمالي الإيرادات بالشحن', 'إجمالي الإيرادات', 'صافي الأرباح', 'إجمالي المصاريف', 'الفلوس اللي معايا', 'رأس المال / تمويل'],
       datasets: [{
         label: 'المبلغ بـ EGP',
-        data: [totalIncomeWithShipping, totalIncome, netProfit, totalExpenses, cashOnHand],
+        data: [totalIncomeWithShipping, totalIncome, netProfit, totalExpenses, cashOnHand, totalManualIncome],
         backgroundColor: [
-          'rgba(45, 140, 240, 0.45)',   // Blue
-          'rgba(201, 168, 76, 0.45)',   // Yellow/Gold
-          'rgba(39, 174, 96, 0.45)',    // Green
-          'rgba(192, 57, 43, 0.45)',    // Red
-          'rgba(124, 58, 237, 0.45)'   // Purple
+          'rgba(45, 140, 240, 0.45)',
+          'rgba(201, 168, 76, 0.45)',
+          'rgba(39, 174, 96, 0.45)',
+          'rgba(192, 57, 43, 0.45)',
+          'rgba(124, 58, 237, 0.45)',
+          'rgba(249, 115, 22, 0.45)'
         ],
         borderColor: [
           '#2d8cf0',
           '#c9a84c',
           '#27ae60',
           '#c0392b',
-          '#7c3aed'
+          '#7c3aed',
+          '#f97316'
         ],
         borderWidth: 1.5
       }]
@@ -1049,7 +1312,7 @@ async function toggleOrderPayment(orderId, type, checked) {
     
     const res = await fetch(`/api/admin/orders/${orderId}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json', password: adminPass },
+      headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken },
       body: JSON.stringify(body)
     });
     if (res.ok) {
@@ -1058,12 +1321,12 @@ async function toggleOrderPayment(orderId, type, checked) {
         order[type] = checked;
       }
       updateDashboardUI();
-      showToast('✅ تم تحديث حالة الدفع للطلب');
+      showToast('تم تحديث حالة الدفع للطلب');
     } else {
-      showToast('❌ حدث خطأ أثناء التحديث', true);
+      showToast('حدث خطأ أثناء التحديث', true);
     }
   } catch(e) {
-    showToast('❌ حدث خطأ أثناء التحديث', true);
+    showToast('حدث خطأ أثناء التحديث', true);
   }
 }
 
@@ -1072,17 +1335,17 @@ async function deleteOrder(orderId) {
   try {
     const res = await fetch(`/api/admin/orders/${orderId}`, {
       method: 'DELETE',
-      headers: { password: adminPass }
+      headers: { 'x-admin-token': adminToken }
     });
     if (res.ok) {
       ordersList = ordersList.filter(o => o.order_id !== orderId);
       updateDashboardUI();
-      showToast('🗑️ تم حذف الطلب بنجاح');
+      showToast('تم حذف الطلب بنجاح');
     } else {
-      showToast('❌ حدث خطأ أثناء الحذف', true);
+      showToast('حدث خطأ أثناء الحذف', true);
     }
   } catch(e) {
-    showToast('❌ حدث خطأ أثناء الحذف', true);
+    showToast('حدث خطأ أثناء الحذف', true);
   }
 }
 
@@ -1094,13 +1357,13 @@ async function addExpense() {
   const reason = reasonInput.value.trim();
   
   if (!amount || amount <= 0 || !reason) {
-    return showToast('❌ يرجى ملء الحقول بقيم صحيحة', true);
+    return showToast('يرجى ملء الحقول بقيم صحيحة', true);
   }
   
   try {
     const res = await fetch('/api/admin/expenses', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', password: adminPass },
+      headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken },
       body: JSON.stringify({ amount, reason })
     });
     if (res.ok) {
@@ -1110,12 +1373,45 @@ async function addExpense() {
       
       amountInput.value = '';
       reasonInput.value = '';
-      showToast('✅ تم إضافة المصروف بنجاح');
+      showToast('تم إضافة المصروف بنجاح');
     } else {
-      showToast('❌ حدث خطأ أثناء الإضافة', true);
+      showToast('حدث خطأ أثناء الإضافة', true);
     }
   } catch(e) {
-    showToast('❌ حدث خطأ أثناء الإضافة', true);
+    showToast('حدث خطأ أثناء الإضافة', true);
+  }
+}
+
+async function addIncome() {
+  const amountInput = document.getElementById('incAmount');
+  const sourceInput = document.getElementById('incSource');
+  
+  const amount = Number(amountInput.value);
+  const source = sourceInput.value.trim();
+  
+  if (!amount || amount <= 0 || !source) {
+    return showToast('يرجى ملء الحقول بقيم صحيحة', true);
+  }
+  
+  try {
+    const res = await fetch('/api/admin/income', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken },
+      body: JSON.stringify({ amount, source })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      incomeList.unshift(data.income);
+      updateDashboardUI();
+      
+      amountInput.value = '';
+      sourceInput.value = '';
+      showToast('تم إضافة الإيراد بنجاح');
+    } else {
+      showToast('حدث خطأ أثناء الإضافة', true);
+    }
+  } catch(e) {
+    showToast('حدث خطأ أثناء الإضافة', true);
   }
 }
 
@@ -1124,19 +1420,46 @@ async function deleteExpense(id) {
   try {
     const res = await fetch(`/api/admin/expenses/${id}`, {
       method: 'DELETE',
-      headers: { password: adminPass }
+      headers: { 'x-admin-token': adminToken }
     });
     if (res.ok) {
       expensesList = expensesList.filter(e => String(e.id) !== String(id));
       updateDashboardUI();
-      showToast('🗑️ تم حذف المصروف بنجاح');
+      showToast('تم حذف المصروف بنجاح');
     } else {
       const data = await res.json().catch(() => ({}));
-      showToast('❌ ' + (data.error || 'حدث خطأ أثناء الحذف'), true);
+      showToast(data.error || 'حدث خطأ أثناء الحذف', true);
     }
   } catch(e) {
-    showToast('❌ حدث خطأ في الاتصال بالسيرفر', true);
+    showToast('حدث خطأ في الاتصال بالسيرفر', true);
   }
+}
+
+async function deleteIncome(id) {
+  if (!confirm('هل أنت متأكد من حذف هذا الإيراد؟')) return;
+  try {
+    const res = await fetch(`/api/admin/income/${id}`, {
+      method: 'DELETE',
+      headers: { 'x-admin-token': adminToken }
+    });
+    if (res.ok) {
+      incomeList = incomeList.filter(i => String(i.id) !== String(id));
+      updateDashboardUI();
+      showToast('تم حذف الإيراد بنجاح');
+    } else {
+      const data = await res.json().catch(() => ({}));
+      showToast(data.error || 'حدث خطأ أثناء الحذف', true);
+    }
+  } catch(e) {
+    showToast('حدث خطأ في الاتصال بالسيرفر', true);
+  }
+}
+
+function switchFinTab(tab) {
+  document.querySelectorAll('.fin-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.fin-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('finTab-' + tab).classList.add('active');
+  document.getElementById('finPanel-' + tab).classList.add('active');
 }
 </script>
 </body>

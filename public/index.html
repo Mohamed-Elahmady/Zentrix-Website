@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Zentrix — Retro Games USB</title>
+  <link rel="icon" type="image/png" sizes="512x512" href="/imgs/favicon.png" />
+  <link rel="apple-touch-icon" sizes="512x512" href="/imgs/favicon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&family=Cinzel:wght@700;900&display=swap" rel="stylesheet" />
   <style>
@@ -50,7 +52,7 @@
     .logo-icon img { width: 100%; height: 100%; object-fit: cover; border-radius: 10px; }
     .logo-text { font-family: 'Cinzel', serif; font-size: 1.5rem; color: var(--gold); letter-spacing: 2px; }
     .logo-sub { font-size: .7rem; color: var(--grey); letter-spacing: 3px; text-transform: uppercase; }
-    .nav-badge { background: rgba(201,168,76,.12); border: 1px solid rgba(201,168,76,.3); color: var(--gold); padding: 6px 16px; border-radius: 20px; font-size: .8rem; letter-spacing: 1px; }
+    .nav-badge { background: rgba(201,168,76,.12); border: 1px solid rgba(201,168,76,.3); color: var(--gold); padding: 6px 16px; border-radius: 20px; font-size: .8rem; letter-spacing: 1px; display: flex; align-items: center; gap: 6px; }
     .nav-contact { display: flex; align-items: center; gap: 8px; background: #25D366; color: white; padding: 8px 18px; border-radius: 20px; font-size: .85rem; font-weight: 700; text-decoration: none; transition: all .25s; letter-spacing: .5px; }
     .nav-contact:hover { background: #1da851; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(37,211,102,.3); }
     .header-right { display: flex; align-items: center; gap: 12px; }
@@ -90,7 +92,7 @@
     .product-card.custom-card::before { background: linear-gradient(90deg, transparent, var(--purple), transparent); }
     .product-card.custom-card:hover, .product-card.custom-card.selected { border-color: var(--purple); box-shadow: 0 20px 50px rgba(0,0,0,.5), 0 0 30px rgba(124,58,237,.15); }
 
-    .card-badge { display: inline-block; background: rgba(201,168,76,.15); border: 1px solid rgba(201,168,76,.4); color: var(--gold); font-size: .7rem; padding: 3px 12px; border-radius: 20px; letter-spacing: 2px; margin-bottom: 20px; }
+    .card-badge { display: inline-flex; align-items: center; gap: 5px; background: rgba(201,168,76,.15); border: 1px solid rgba(201,168,76,.4); color: var(--gold); font-size: .7rem; padding: 3px 12px; border-radius: 20px; letter-spacing: 2px; margin-bottom: 20px; }
     .card-badge.popular { background: rgba(201,168,76,.25); border-color: var(--gold); }
     .card-badge.custom-badge { background: rgba(124,58,237,.2); border-color: rgba(124,58,237,.5); color: #a78bfa; }
     .card-size { font-family: 'Cinzel', serif; font-size: 2.5rem; color: var(--white); margin-bottom: 8px; }
@@ -152,7 +154,7 @@
     .form-subtitle { color: var(--grey); font-size: .9rem; margin-bottom: 32px; }
     .selected-product-banner { background: rgba(201,168,76,.1); border: 1px solid rgba(201,168,76,.3); border-radius: 12px; padding: 14px 20px; margin-bottom: 28px; display: flex; align-items: center; gap: 12px; }
     .selected-product-banner.custom-banner { background: rgba(124,58,237,.1); border-color: rgba(124,58,237,.35); }
-    .spb-icon { font-size: 1.5rem; }
+    .spb-icon { font-size: 1.5rem; display: flex; align-items: center; }
     .spb-name { font-weight: 700; color: var(--gold); }
     .spb-name.custom-name { color: #a78bfa; }
     .spb-games { font-size: .8rem; color: var(--grey); }
@@ -168,8 +170,11 @@
       font-size: .87rem;
       color: var(--white);
       line-height: 1.6;
+      display: none;
+      align-items: flex-start;
+      gap: 10px;
     }
-    .personal-flash-notice.show { display: block; }
+    .personal-flash-notice.show { display: flex; }
     .personal-flash-notice strong { color: #a78bfa; }
 
     .form-group { margin-bottom: 20px; }
@@ -198,7 +203,7 @@
     .payment-opt:hover { border-color: rgba(201,168,76,.4); }
     .payment-opt.active { border-color: var(--gold); background: rgba(201,168,76,.1); }
     .payment-opt input[type="radio"] { display: none; }
-    .payment-icon { font-size: 1.8rem; margin-bottom: 8px; }
+    .payment-icon { display: flex; align-items: center; justify-content: center; margin-bottom: 8px; }
     .payment-name { font-weight: 700; color: var(--white); font-size: .95rem; }
     .payment-desc { font-size: .75rem; color: var(--grey); margin-top: 4px; }
 
@@ -217,7 +222,7 @@
     .success-box { background: var(--navy-mid); border: 1px solid rgba(201,168,76,.4); border-radius: 24px; padding: 40px; max-width: 500px; width: 100%; text-align: center; animation: slideUp .4s ease; position: relative; }
     .success-close-btn { position: absolute; top: 16px; left: 16px; width: 34px; height: 34px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); border-radius: 8px; color: var(--grey); font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .2s; }
     .success-close-btn:hover { background: rgba(192,57,43,.2); color: var(--danger); border-color: var(--danger); }
-    .success-icon { font-size: 4rem; margin-bottom: 16px; }
+    .success-icon { display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
     .success-order-id { font-family: 'Cinzel', serif; font-size: 1.4rem; color: var(--gold); margin-bottom: 8px; }
     .success-msg { color: var(--grey); font-size: .95rem; margin-bottom: 24px; line-height: 1.6; }
     .payment-detail-box { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.1); border-radius: 12px; padding: 16px; margin-bottom: 24px; text-align: right; }
@@ -247,7 +252,7 @@
     .step p { font-size: .82rem; color: var(--grey); line-height: 1.6; }
 
     /* FOOTER */
-    footer { text-align: center; padding: 30px 5%; border-top: 1px solid rgba(255,255,255,.06); color: var(--grey); font-size: .8rem; }
+    footer { text-align: center; padding: 30px 5%; border-top: 1px solid rgba(255,255,255,.06); color: var(--grey); font-size: .8rem; display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; }
     footer strong { color: var(--gold); }
 
     /* ANIMATIONS */
@@ -260,7 +265,11 @@
     ::-webkit-scrollbar-track { background: var(--navy); }
     ::-webkit-scrollbar-thumb { background: var(--gold-dim); border-radius: 3px; }
 
-    /* ── MOBILE RESPONSIVE ─────────────────────────────────────── */
+    /* SVG Icon helpers */
+    .icon { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .icon svg { display: block; }
+
+    /* ── MOBILE RESPONSIVE ─────────────────────────────────────────────────────────── */
 
     /* Tablet */
     @media (max-width: 768px) {
@@ -369,7 +378,7 @@
       /* Payment */
       .payment-options { grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
       .payment-opt { padding: 12px 8px; border-radius: 10px; }
-      .payment-icon { font-size: 1.4rem; margin-bottom: 5px; }
+      .payment-icon { margin-bottom: 5px; }
       .payment-name { font-size: .82rem; }
       .payment-desc { font-size: .68rem; }
       .cash-notice { font-size: .82rem; padding: 12px 14px; }
@@ -393,7 +402,6 @@
       /* Success modal */
       .success-modal { padding: 12px; align-items: flex-end; }
       .success-box { padding: 28px 16px; border-radius: 20px 20px 0 0; }
-      .success-icon { font-size: 3rem; }
       .success-order-id { font-size: 1.15rem; }
       .success-msg { font-size: .85rem; }
       .payment-detail-box { padding: 12px 14px; }
@@ -421,18 +429,116 @@
 </head>
 <body>
 
+<!-- SVG Icons (hidden, referenced via use) -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+  <!-- phone / whatsapp -->
+  <symbol id="icon-whatsapp" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+  </symbol>
+  <!-- egypt flag / location -->
+  <symbol id="icon-location" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+    <circle cx="12" cy="9" r="2.5"/>
+  </symbol>
+  <!-- usb / flash drive -->
+  <symbol id="icon-usb" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M8 2v4l-2 2v8a2 2 0 002 2h8a2 2 0 002-2V8l-2-2V2"/>
+    <line x1="12" y1="18" x2="12" y2="22"/>
+    <line x1="9" y1="2" x2="15" y2="2"/>
+    <line x1="10" y1="7" x2="14" y2="7"/>
+  </symbol>
+  <!-- gamepad -->
+  <symbol id="icon-gamepad" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="2" y="6" width="20" height="12" rx="2"/>
+    <path d="M6 12h4M8 10v4"/>
+    <circle cx="16" cy="11" r="1" fill="currentColor" stroke="none"/>
+    <circle cx="18" cy="13" r="1" fill="currentColor" stroke="none"/>
+  </symbol>
+  <!-- cash / money -->
+  <symbol id="icon-cash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="2" y="6" width="20" height="12" rx="2"/>
+    <circle cx="12" cy="12" r="2.5"/>
+    <path d="M17 12h.01M7 12h.01"/>
+  </symbol>
+  <!-- mobile phone / instapay -->
+  <symbol id="icon-mobile" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="5" y="2" width="14" height="20" rx="2"/>
+    <line x1="12" y1="18" x2="12.01" y2="18"/>
+  </symbol>
+  <!-- check circle -->
+  <symbol id="icon-check-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="10"/>
+    <polyline points="9 12 11 14 15 10"/>
+  </symbol>
+  <!-- package / box -->
+  <symbol id="icon-package" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M16.5 9.4L7.55 4.24"/>
+    <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 002 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/>
+    <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+    <line x1="12" y1="22.08" x2="12" y2="12"/>
+  </symbol>
+  <!-- envelope / mail (for custom card) -->
+  <symbol id="icon-envelope" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+    <polyline points="22,6 12,13 2,6"/>
+  </symbol>
+  <!-- credit card / instapay logo-like -->
+  <symbol id="icon-card" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="1" y="4" width="22" height="16" rx="2"/>
+    <line x1="1" y1="10" x2="23" y2="10"/>
+  </symbol>
+  <!-- star -->
+  <symbol id="icon-star" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+  </symbol>
+  <!-- close / X -->
+  <symbol id="icon-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+    <line x1="18" y1="6" x2="6" y2="18"/>
+    <line x1="6" y1="6" x2="18" y2="18"/>
+  </symbol>
+  <!-- send / confirm -->
+  <symbol id="icon-send" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="22" y1="2" x2="11" y2="13"/>
+    <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+  </symbol>
+  <!-- clock / waiting -->
+  <symbol id="icon-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="10"/>
+    <polyline points="12 6 12 12 16 14"/>
+  </symbol>
+  <!-- loading -->
+  <symbol id="icon-loading" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+    <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+  </symbol>
+  <!-- coin / money wallet -->
+  <symbol id="icon-coin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="8"/>
+    <path d="M12 8v8M9.5 10.5A2.5 2.5 0 0112 8a2.5 2.5 0 010 5 2.5 2.5 0 000 5 2.5 2.5 0 002.5-2.5"/>
+  </symbol>
+  <!-- sparkle / diamond -->
+  <symbol id="icon-sparkle" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+    <path d="M12 2l1.5 4.5L18 8l-4.5 1.5L12 14l-1.5-4.5L6 8l4.5-1.5L12 2z"/>
+  </symbol>
+</svg>
+
 <!-- HEADER -->
 <header>
   <div class="logo-area">
-    <div class="logo-icon"><img src="/imgs/logo.png" alt="Zentrix Logo" /></div>
+    <div class="logo-icon"><img src="/imgs/favicon.png" alt="Zentrix Logo" /></div>
     <div>
       <div class="logo-text">ZENTRIX</div>
       <div class="logo-sub">Retro Games USB</div>
     </div>
   </div>
   <div class="header-right">
-    <a class="nav-contact" id="headerContactBtn" href="#" target="_blank">📲 تواصل معنا</a>
-    <div class="nav-badge">🇪🇬 توصيل لكل مصر</div>
+    <a class="nav-contact" id="headerContactBtn" href="#" target="_blank">
+      <svg width="16" height="16"><use href="#icon-whatsapp"/></svg>
+      تواصل معنا
+    </a>
+    <div class="nav-badge">
+      <svg width="14" height="14"><use href="#icon-location" stroke="currentColor"/></svg>
+      توصيل لكل مصر
+    </div>
   </div>
 </header>
 
@@ -474,7 +580,7 @@
     <div class="step"><div class="step-num">١</div><h3>اختار الفلاشة</h3><p>64GB أو 128GB أو ابعت فلاشتك الشخصية</p></div>
     <div class="step"><div class="step-num">٢</div><h3>شوف الألعاب</h3><p>اعرف إيه اللي جوه قبل ما تطلب</p></div>
     <div class="step"><div class="step-num">٣</div><h3>اطلب وادفع</h3><p>Cash أو Instapay، ببياناتك وعنوانك</p></div>
-    <div class="step"><div class="step-num">٤</div><h3>استلم العبه</h3><p>توصيل لباب بيتك في كل محافظات مصر</p></div>
+    <div class="step"><div class="step-num">٤</div><h3>استلم الفلاشة</h3><p>توصيل لباب بيتك في كل محافظات مصر</p></div>
   </div>
 </section>
 
@@ -486,7 +592,9 @@
     <div class="form-subtitle">بياناتك بتبقى عندنا وبنبعتلك التأكيد على الواتساب</div>
 
     <div class="selected-product-banner" id="selectedBanner">
-      <div class="spb-icon">💾</div>
+      <div class="spb-icon">
+        <svg width="24" height="24" style="color:var(--gold)"><use href="#icon-usb" stroke="currentColor"/></svg>
+      </div>
       <div>
         <div class="spb-name" id="spbName">—</div>
         <div class="spb-games" id="spbGames">—</div>
@@ -495,7 +603,8 @@
 
     <!-- Personal flash notice -->
     <div class="personal-flash-notice" id="personalFlashNotice">
-      📦 <strong>فلاشة شخصية:</strong> هتبعتلنا فلاشتك مع الطلب وإحنا بنحط عليها الألعاب ونرجعهالك مع التوصيل.
+      <svg width="18" height="18" style="color:#a78bfa;flex-shrink:0;margin-top:2px"><use href="#icon-package" stroke="currentColor"/></svg>
+      <span><strong>فلاشة شخصية:</strong> هتبعتلنا فلاشتك مع الطلب وإحنا بنحط عليها الألعاب ونرجعهالك مع التوصيل.</span>
     </div>
 
     <!-- Personal Info -->
@@ -548,20 +657,25 @@
     <div class="payment-options">
       <label class="payment-opt" id="optCash" onclick="selectPayment('cash')">
         <input type="radio" name="payment" value="cash" />
-        <div class="payment-icon">💵</div>
+        <div class="payment-icon">
+          <svg width="32" height="32" style="color:var(--gold-light)"><use href="#icon-cash" stroke="currentColor"/></svg>
+        </div>
         <div class="payment-name">كاش</div>
         <div class="payment-desc">بتدفع الشحن مقدماً</div>
       </label>
       <label class="payment-opt" id="optInstapay" onclick="selectPayment('instapay')">
         <input type="radio" name="payment" value="instapay" />
-        <div class="payment-icon">📱</div>
+        <div class="payment-icon">
+          <svg width="32" height="32" style="color:#a78bfa"><use href="#icon-mobile" stroke="currentColor"/></svg>
+        </div>
         <div class="payment-name">Instapay</div>
         <div class="payment-desc">بتدفع الكل مقدماً</div>
       </label>
     </div>
 
     <div class="cash-notice" id="cashNotice">
-      💰 <strong>الدفع عند الاستلام (كاش):</strong><br/>
+      <svg width="16" height="16" style="color:#2ecc71;display:inline-block;vertical-align:middle;margin-left:6px"><use href="#icon-coin" stroke="currentColor"/></svg>
+      <strong>الدفع عند الاستلام (كاش):</strong><br/>
       يتم دفع <strong>رسوم الشحن فقط مقدماً</strong> لتأكيد الطلب، ثم تدفع قيمة المنتج عند الاستلام.<br/>
       هتبعتلنا رسالة على الواتساب بعد الإرسال لتأكيد الطلب.
     </div>
@@ -577,11 +691,13 @@
   <div class="modal-box">
     <div class="modal-header">
       <div class="modal-title" id="modalTitle">الألعاب</div>
-      <button class="modal-close" onclick="closeModal()">✕</button>
+      <button class="modal-close" onclick="closeModal()">
+        <svg width="16" height="16"><use href="#icon-close"/></svg>
+      </button>
     </div>
     <div id="modalContent"></div>
     <div class="modal-cta">
-      <button class="btn-select" id="modalSelectBtn" onclick="selectFromModal()">اختار هذه الفلاشة ✦</button>
+      <button class="btn-select" id="modalSelectBtn" onclick="selectFromModal()">اختار الفلاشة ✦</button>
     </div>
   </div>
 </div>
@@ -589,8 +705,12 @@
 <!-- SUCCESS MODAL -->
 <div class="success-modal" id="successModal">
   <div class="success-box">
-    <button class="success-close-btn" onclick="resetOrder()" title="إغلاق">✕</button>
-    <div class="success-icon">✅</div>
+    <button class="success-close-btn" onclick="resetOrder()" title="إغلاق">
+      <svg width="16" height="16"><use href="#icon-close"/></svg>
+    </button>
+    <div class="success-icon">
+      <svg width="64" height="64" style="color:#27ae60"><use href="#icon-check-circle" stroke="currentColor"/></svg>
+    </div>
     <div class="success-order-id" id="successOrderId">ZNT-0000</div>
     <div class="success-msg" id="successMsg">تم استلام طلبك! اتبع الخطوات التالية لتأكيد طلبك:</div>
     <div class="payment-detail-box" id="paymentDetailBox"></div>
@@ -605,10 +725,12 @@
       </div>
     </div>
     <a class="btn-instapay-pay" id="instapayPayBtn" href="#" target="_blank">
-      <span>📱</span> الدفع عبر Instapay الآن
+      <svg width="18" height="18"><use href="#icon-card" stroke="white" fill="none"/></svg>
+      الدفع عبر Instapay الآن
     </a>
     <a class="btn-whatsapp" id="whatsappLink" href="#" target="_blank">
-      <span>📲</span> ابعت سكرين شوت الدفع على الواتساب
+      <svg width="18" height="18"><use href="#icon-whatsapp"/></svg>
+      ابعت سكرين شوت الدفع على الواتساب
     </a>
     <button class="btn-new-order" onclick="resetOrder()">طلب جديد</button>
   </div>
@@ -616,7 +738,8 @@
 
 <!-- FOOTER -->
 <footer>
-  <strong>ZENTRIX</strong> — Retro Games USB &nbsp;|&nbsp; تصنيع وشحن من مصر 🇪🇬
+  <strong>ZENTRIX</strong> — Retro Games USB &nbsp;|&nbsp; تصنيع وشحن من مصر
+  <svg width="18" height="18" style="color:var(--gold)"><use href="#icon-location" stroke="currentColor"/></svg>
 </footer>
 
 <script>
@@ -664,7 +787,10 @@ function renderProducts() {
   // Standard cards
   const standardCards = ['64gb', '128gb'].map(key => {
     const p = settings.products[key];
-    const badges = { '64gb': 'الفلاشة الأساسية', '128gb': 'الأرشيف الكامل ⭐' };
+    const badges = {
+      '64gb':  `<svg width="12" height="12"><use href="#icon-usb" stroke="currentColor"/></svg> الفلاشة الأساسية`,
+      '128gb': `<svg width="12" height="12"><use href="#icon-star"/></svg> الأرشيف الكامل`
+    };
     const isPopular = key === '128gb';
     const priceHtml = p.price > 0
       ? `<div class="card-price">${p.price.toLocaleString('en-US')} جنيه </div>`
@@ -685,8 +811,11 @@ function renderProducts() {
           </div>
         </div>
         ${priceHtml}
-        <button class="btn-view-games" onclick="openGamesModal('${key}')">🎮 شوف الألعاب الجوه</button>
-        <button class="btn-select" onclick="selectProduct('${key}')">اختار هذه الفلاشة ✦</button>
+        <button class="btn-view-games" onclick="openGamesModal('${key}')">
+          <svg width="16" height="16" style="color:currentColor"><use href="#icon-gamepad" stroke="currentColor"/></svg>
+          شوف الألعاب الجوه
+        </button>
+        <button class="btn-select" onclick="selectProduct('${key}')">اختار الفلاشة ✦</button>
       </div>`;
   }).join('');
 
@@ -697,8 +826,11 @@ function renderProducts() {
 
   const customCard = `
     <div class="product-card custom-card" id="card-custom">
-      <div class="card-badge custom-badge">✉️ فلاشتك الشخصية</div>
-      <div class="card-size" style="font-size:2rem;">Custom</div>
+      <div class="card-badge custom-badge">
+        <svg width="12" height="12"><use href="#icon-envelope" stroke="currentColor"/></svg>
+        فلاشتك الشخصية
+      </div>
+      <div class="card-size" style="font-size:2rem;">Personal Flash</div>
       <div class="card-desc">${custom ? custom.description : 'بتبعتلنا فلاشتك وإحنا بنحط عليها الألعاب'}</div>
 
       <div class="flash-size-selector">
@@ -706,11 +838,10 @@ function renderProducts() {
         <div class="size-btns">${sizeBtnsHtml}</div>
       </div>
 
-      <div style="background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.3);border-radius:10px;padding:10px 14px;margin-bottom:16px;font-size:.82rem;color:#c4b5fd;line-height:1.5;">
-        📦 هتبعتلنا فلاشتك مع الطلب، وإحنا بنحط عليها الألعاب ونرجعهالك مع التوصيل.
+      <div style="background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.3);border-radius:10px;padding:10px 14px;margin-bottom:16px;font-size:.82rem;color:#c4b5fd;line-height:1.5;display:flex;align-items:flex-start;gap:8px;">
+        <svg width="16" height="16" style="flex-shrink:0;margin-top:2px"><use href="#icon-package" stroke="currentColor"/></svg>
+        <span>هتبعتلنا فلاشتك مع الطلب، وإحنا بنحط عليها الألعاب ونرجعهالك مع التوصيل.</span>
       </div>
-
-
 
       <div class="custom-price-display" id="customPriceDisplay">اختار حجم الفلاشة</div>
 
@@ -780,7 +911,7 @@ function openGamesModal(key) {
   let html = '';
   for (const [console_, games] of Object.entries(p.games)) {
     html += `<div class="console-section">
-      <div class="console-name">🕹 ${console_}</div>
+      <div class="console-name">${console_}</div>
       <div class="games-grid">${games.map(g => `<div class="game-tag">${g}</div>`).join('')}</div>
     </div>`;
   }
@@ -788,13 +919,15 @@ function openGamesModal(key) {
   document.getElementById('gamesModal').classList.add('open');
   document.body.style.overflow = 'hidden';
 }
+
 function closeModal() {
   document.getElementById('gamesModal').classList.remove('open');
   document.body.style.overflow = '';
 }
+
 function selectFromModal() {
   closeModal();
-  selectProduct(modalProduct);
+  if (modalProduct) selectProduct(modalProduct);
 }
 document.getElementById('gamesModal').addEventListener('click', e => {
   if (e.target === e.currentTarget) closeModal();
@@ -879,7 +1012,7 @@ async function submitOrder() {
 
   const btn = document.getElementById('btnSubmit');
   btn.disabled = true;
-  btn.textContent = '⏳ جاري إرسال الطلب...';
+  btn.innerHTML = `<svg width="16" height="16" style="animation:spin 1s linear infinite"><use href="#icon-loading" stroke="currentColor"/></svg> جاري إرسال الطلب...`;
 
   const body = {
     name, phone, whatsapp,
@@ -974,6 +1107,11 @@ function resetOrder() {
   document.getElementById('f_gov').value = '';
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
+
+// Spin animation for loading icon
+const spinStyle = document.createElement('style');
+spinStyle.textContent = '@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }';
+document.head.appendChild(spinStyle);
 
 init();
 </script>

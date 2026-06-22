@@ -84,6 +84,7 @@
   },
   "whatsapp_number": "201556018222",
   "instapay_link": "https://ipn.eg/S/mohammed.elahmady/instapay/1soctd",
-  "admin_password": "Ahmady",
-  "google_sheets_url": "https://script.google.com/macros/s/AKfycbwFB3_eNOKlptvxma327jCvEsjJ1Aous5yBVfdK5WdRGezrxnm4RStXW2SrWa0m9GKMRQ/exec"
+  "admin_password": "jB_qA9wjrIKrijqzzzXQsg",
+  "google_sheets_url": "https://script.google.com/macros/s/AKfycbwFB3_eNOKlptvxma327jCvEsjJ1Aous5yBVfdK5WdRGezrxnm4RStXW2SrWa0m9GKMRQ/exec",
+  "admin_slug": "mysecretsection"
 }
