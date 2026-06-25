@@ -427,7 +427,7 @@
     <div class="login-sub">Zentrix — الإدارة والإعدادات</div>
     <input type="password" id="passInput" placeholder="كلمة السر" onkeydown="if(event.key==='Enter')doLogin()" />
     <button class="btn-login" onclick="doLogin()">دخول</button>
-    <div class="login-err" id="loginErr" style="display:flex;align-items:center;gap:6px;justify-content:center;">
+    <div class="login-err" id="loginErr" style="display:none;align-items:center;gap:6px;justify-content:center;">
       <svg width="15" height="15" style="color:var(--danger)"><use href="#ai-x" stroke="currentColor"/></svg>
       كلمة السر غلط
     </div>
@@ -1202,9 +1202,13 @@ function updateDashboardUI() {
           <td style="font-weight: bold; color: var(--white);">EGP ${Number(o.total || 0).toLocaleString('en-US')}</td>
           <td style="text-align: center;">
             <input type="checkbox" class="admin-checkbox" ${o.shipping_paid ? 'checked' : ''} onchange="toggleOrderPayment('${o.order_id}', 'shipping_paid', this.checked)">
+            <div style="font-size:0.65rem; margin-top:3px; color: var(--gold);">Instapay ✓</div>
           </td>
           <td style="text-align: center;">
             <input type="checkbox" class="admin-checkbox" ${o.product_paid ? 'checked' : ''} onchange="toggleOrderPayment('${o.order_id}', 'product_paid', this.checked)">
+            <div style="font-size:0.65rem; margin-top:3px; color: ${o.payment === 'instapay' ? 'var(--gold)' : 'var(--grey)'};">
+              ${o.payment === 'instapay' ? 'Instapay ✓' : 'كاش عند التسليم'}
+            </div>
           </td>
         </tr>
       `;

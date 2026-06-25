@@ -92,8 +92,9 @@ function doPost(e) {
       data.governorate     || '',
       data.city            || '',
       data.address         || '',
-      data.shipping_paid === undefined ? false : data.shipping_paid,
-      data.product_paid === undefined ? false : data.product_paid,
+      // Both always start unchecked — admin manually checks when payment is confirmed
+      false,   // shipping_paid (col 14)
+      false,   // product_paid  (col 15)
       data.status          || 'Confirmed',
       data.flash_type      || 'New'
     ];
@@ -101,6 +102,12 @@ function doPost(e) {
     sheet.appendRow(row);
 
     const lastRow = sheet.getLastRow();
+
+    // Force phone & whatsapp cols (4, 5) to plain text so '+20 ...' doesn't parse as formula
+    sheet.getRange(lastRow, 4).setNumberFormat('@');
+    sheet.getRange(lastRow, 5).setNumberFormat('@');
+    sheet.getRange(lastRow, 4).setValue(data.phone || '');
+    sheet.getRange(lastRow, 5).setValue(data.whatsapp || '');
 
     // Insert checkboxes in Shipping Paid (col 14) and Product Paid (col 15)
     sheet.getRange(lastRow, 14).insertCheckboxes();

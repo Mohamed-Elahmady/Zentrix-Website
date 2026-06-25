@@ -186,6 +186,8 @@
     select option { background-color: var(--navy-mid); color: var(--white); }
     input:focus, select:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(201,168,76,.1); }
     input::placeholder { color: rgba(155,168,184,.4); }
+    .field-err { display: block; color: #e74c3c; font-size: 0.78rem; margin-top: 5px; min-height: 1em; }
+    input.input-err { border-color: #e74c3c !important; box-shadow: 0 0 0 3px rgba(231,76,60,.15) !important; }
 
     .section-divider { border: none; border-top: 1px solid rgba(255,255,255,.07); margin: 28px 0; }
     .subsection-label { font-size: .8rem; letter-spacing: 2px; color: var(--gold-dim); text-transform: uppercase; margin-bottom: 16px; }
@@ -616,11 +618,13 @@
     <div class="form-row">
       <div class="form-group">
         <label>رقم للمكالمات <span class="req">*</span></label>
-        <input type="tel" id="f_phone" placeholder="01XXXXXXXXX" />
+        <input type="tel" id="f_phone" placeholder="01XXXXXXXXX" inputmode="numeric" oninput="sanitizePhone(this)" onblur="validatePhone(this, 'err_phone')" />
+        <span class="field-err" id="err_phone"></span>
       </div>
       <div class="form-group">
         <label>رقم الواتساب <span class="req">*</span></label>
-        <input type="tel" id="f_whatsapp" placeholder="01XXXXXXXXX" />
+        <input type="tel" id="f_whatsapp" placeholder="01XXXXXXXXX" inputmode="numeric" oninput="sanitizePhone(this)" onblur="validatePhone(this, 'err_whatsapp')" />
+        <span class="field-err" id="err_whatsapp"></span>
       </div>
     </div>
 
@@ -993,6 +997,35 @@ function selectPayment(method) {
   document.getElementById('cashNotice').classList.toggle('show', method === 'cash');
 }
 
+// ── PHONE VALIDATION ──────────────────────────────────────────────────────────
+function sanitizePhone(input) {
+  // Convert Arabic/Eastern-Arabic digits to English
+  let v = input.value
+    .replace(/[٠-٩]/g, d => d.charCodeAt(0) - 0x0660)
+    .replace(/[۰-۹]/g, d => d.charCodeAt(0) - 0x06F0);
+  // Keep only digits
+  v = v.replace(/[^0-9]/g, '');
+  input.value = v;
+  // Clear error while typing
+  const errId = input.id === 'f_phone' ? 'err_phone' : 'err_whatsapp';
+  document.getElementById(errId).textContent = '';
+  input.classList.remove('input-err');
+}
+
+function validatePhone(input, errId) {
+  const v = input.value.trim();
+  const errEl = document.getElementById(errId);
+  // Must be 11 digits starting with 01
+  if (!/^01[0-9]{9}$/.test(v)) {
+    errEl.textContent = 'رقم غير صحيح — أدخل 11 رقم يبدأ بـ 01';
+    input.classList.add('input-err');
+    return false;
+  }
+  errEl.textContent = '';
+  input.classList.remove('input-err');
+  return true;
+}
+
 // ── SUBMIT ────────────────────────────────────────────────────────────────────
 async function submitOrder() {
   if (!selectedProduct) return alert('اختار الفلاشة الأول');
@@ -1009,6 +1042,11 @@ async function submitOrder() {
   if (!name || !phone || !whatsapp || !gov || !city || !address) {
     return alert('من فضلك اكمل كل البيانات المطلوبة');
   }
+
+  // Validate phone formats
+  const phoneOk    = validatePhone(document.getElementById('f_phone'),    'err_phone');
+  const whatsappOk = validatePhone(document.getElementById('f_whatsapp'), 'err_whatsapp');
+  if (!phoneOk || !whatsappOk) return;
 
   const btn = document.getElementById('btnSubmit');
   btn.disabled = true;

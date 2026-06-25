@@ -49,6 +49,14 @@ function generateOrderId() {
   return 'ZNT-' + Math.floor(1000 + Math.random() * 9000);
 }
 
+function formatPhone(num) {
+  let digits = String(num).replace(/\D/g, '');
+  if (digits.startsWith('20')) digits = digits.slice(2);
+  else if (digits.startsWith('0')) digits = digits.slice(1);
+  // Format: +20 1XX XXX XXXX
+  return '+20 ' + digits.slice(0,3) + ' ' + digits.slice(3,6) + ' ' + digits.slice(6);
+}
+
 // ─── Simple JWT (no library needed) ──────────────────────────────────────────
 function createToken(payload) {
   const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url');
@@ -171,7 +179,7 @@ app.post('/api/order', async (req, res) => {
   const orderData = {
     order_id: orderId,
     timestamp: new Date().toLocaleString('en-US', { timeZone: 'Africa/Cairo' }),
-    name, phone, whatsapp,
+    name, phone: formatPhone(phone), whatsapp: formatPhone(whatsapp),
     product: productLabel,
     flash_size: isCustom ? flash_size : null,
     flash_type: flashType,
@@ -179,8 +187,8 @@ app.post('/api/order', async (req, res) => {
     product_price: productPrice,
     shipping_cost: effectiveShipping,
     total, payment, governorate, city, address,
-    shipping_paid: true,
-    product_paid: payment === 'instapay' ? true : false,
+    shipping_paid: false,
+    product_paid: false,
     status: 'Confirmed',
   };
 
