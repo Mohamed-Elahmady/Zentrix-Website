@@ -537,6 +537,19 @@ async function addExpense() {
   if (!amount || amount <= 0 || !reason) {
     return showToast('يرجى ملء الحقول بقيم صحيحة', true);
   }
+
+  // ── حساب الرصيد المتاح الحالي ──
+  const totalSales = ordersList.reduce((sum, o) => sum + Number(o.totalPrice || 0), 0);
+  const totalManual = incomeList.reduce((sum, i) => sum + Number(i.amount || 0), 0);
+  const totalSpent  = expensesList.reduce((sum, e) => sum + Number(e.amount || 0), 0);
+  const currentCash = totalSales + totalManual - totalSpent;
+
+  if (amount > currentCash) {
+    return showToast(
+      `❌ الرصيد غير كافي! المتاح: EGP ${currentCash.toLocaleString('en-US')} — المطلوب: EGP ${amount.toLocaleString('en-US')}`,
+      true
+    );
+  }
   
   try {
     const res = await fetch('/api/admin/expenses', {
