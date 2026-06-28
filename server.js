@@ -337,9 +337,28 @@ app.post('/api/admin/login', checkRateLimit, (req, res) => {
 });
 
 // ─── Admin API (protected by JWT) ────────────────────────────────────────────
+// ─── Combined Dashboard endpoint — single call returns orders+expenses+income ──
+app.get('/api/admin/dashboard', requireAuth, async (req, res) => {
+  const settings = getSettings();
+  const sheetsUrl = settings.google_sheets_url;
+
+  if (sheetsUrl) {
+    const data = await getDashboardDataAsync(sheetsUrl);
+    return res.json(data);
+  }
+
+  // Fallback: local JSON files (localhost dev)
+  res.json({
+    orders:   readLocalCacheFile('orders.json'),
+    expenses: readLocalCacheFile('expenses.json'),
+    income:   readLocalCacheFile('income.json')
+  });
+});
+
 app.get('/api/admin/settings', requireAuth, (req, res) => {
   res.json(getSettings());
 });
+
 
 app.get('/api/admin/orders', requireAuth, async (req, res) => {
   const settings = getSettings();
@@ -364,26 +383,7 @@ app.put('/api/admin/orders/:order_id', requireAuth, async (req, res) => {
   const settings = getSettings();
   const sheetsUrl = settings.google_sheets_url;
 
-  if (sheetsUrl) {
-    try {
-      const response = await fetch(sheetsUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'update',
-          order_id,
-          shipping_paid,
-          product_paid
-        })
-      });
-      if (response.ok) {
-        cachedDashboardData = null; // Invalidate dashboard cache
-      }
-    } catch (err) {
-      console.error('Error updating order on Google Sheets:', err.message);
-    }
-  }
-
+  // Update local cache immediately
   const ordersPath = path.join(__dirname, 'data', 'orders.json');
   let orderUpdated = null;
   if (fs.existsSync(ordersPath)) {
@@ -403,8 +403,21 @@ app.put('/api/admin/orders/:order_id', requireAuth, async (req, res) => {
     orderUpdated = { order_id, shipping_paid, product_paid };
   }
 
+  // Respond instantly — don't wait for Sheets
   res.json({ success: true, order: orderUpdated });
+
+  // Sync to Google Sheets in background (non-blocking)
+  if (sheetsUrl) {
+    fetch(sheetsUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'update', order_id, shipping_paid, product_paid })
+    }).then(r => {
+      if (r.ok) cachedDashboardData = null;
+    }).catch(err => console.error('Background Sheets update error:', err.message));
+  }
 });
+
 
 app.delete('/api/admin/orders/:order_id', requireAuth, async (req, res) => {
   const { order_id } = req.params;

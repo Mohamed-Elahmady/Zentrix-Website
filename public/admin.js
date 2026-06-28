@@ -5,6 +5,8 @@ let activeGamesTab = '16gb';
 async function doLogin() {
   const pass = document.getElementById('passInput').value;
   const errEl = document.getElementById('loginErr');
+  const btn = document.getElementById('loginBtn');
+  if (btn) { btn.disabled = true; btn.textContent = 'جاري الدخول...'; }
   try {
     const res = await fetch('/api/admin/login', {
       method: 'POST',
@@ -16,17 +18,23 @@ async function doLogin() {
       adminToken = data.token;  // keep token in memory only — never in localStorage
       errEl.style.display = 'none';
       errEl.textContent = 'كلمة السر غلط';
-      await loadAdminSettings();
+
+      // ── Show dashboard immediately, load data in background ──
       document.getElementById('loginScreen').style.display = 'none';
       document.getElementById('dashboard').style.display = 'block';
       const savedTab = localStorage.getItem('activeDashboardTab') || 'overview';
       switchDashboardTab(savedTab);
+
+      // Load settings and data without blocking the UI
+      loadAdminSettings();
     } else {
       errEl.textContent = data.error || 'كلمة السر غلط';
       errEl.style.display = 'block';
     }
   } catch(e) {
     errEl.style.display = 'block';
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'دخول'; }
   }
 }
 
@@ -301,18 +309,19 @@ let financeChart = null;
 
 async function loadDashboardData() {
   try {
-    const [ordersRes, expensesRes, incomeRes] = await Promise.all([
-      fetch('/api/admin/orders',  { headers: { 'x-admin-token': adminToken } }),
-      fetch('/api/admin/expenses',{ headers: { 'x-admin-token': adminToken } }),
-      fetch('/api/admin/income',  { headers: { 'x-admin-token': adminToken } })
-    ]);
-    ordersList   = await ordersRes.json();
-    expensesList = await expensesRes.json();
-    incomeList   = await incomeRes.json();
-    
+    // Single combined request — avoids 3 parallel fetches and race conditions
+    const res = await fetch('/api/admin/dashboard', { headers: { 'x-admin-token': adminToken } });
+    if (!res.ok) throw new Error('Dashboard fetch failed');
+    const data = await res.json();
+    ordersList   = Array.isArray(data.orders)   ? data.orders   : [];
+    expensesList = Array.isArray(data.expenses)  ? data.expenses : [];
+    incomeList   = Array.isArray(data.income)    ? data.income   : [];
     updateDashboardUI();
   } catch(e) {
     console.error('Error loading dashboard data:', e);
+    showToast('تعذّر تحميل البيانات — جاري إعادة المحاولة...', true);
+    // Retry once after 3 seconds
+    setTimeout(loadDashboardData, 3000);
   }
 }
 
@@ -512,26 +521,32 @@ function updateDashboardUI() {
 }
 
 async function toggleOrderPayment(orderId, type, checked) {
+  // ── Optimistic update: apply change instantly, sync to server in background ──
+  const order = ordersList.find(o => o.order_id === orderId);
+  const previousValue = order ? order[type] : !checked;
+  if (order) {
+    order[type] = checked;
+    updateDashboardUI(); // instant UI refresh
+  }
+
   try {
     const body = {};
     body[type] = checked;
-    
     const res = await fetch(`/api/admin/orders/${orderId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken },
       body: JSON.stringify(body)
     });
     if (res.ok) {
-      const order = ordersList.find(o => o.order_id === orderId);
-      if (order) {
-        order[type] = checked;
-      }
-      updateDashboardUI();
-      showToast('تم تحديث حالة الدفع للطلب');
+      showToast('تم تحديث حالة الدفع');
     } else {
+      // Rollback on failure
+      if (order) { order[type] = previousValue; updateDashboardUI(); }
       showToast('حدث خطأ أثناء التحديث', true);
     }
   } catch(e) {
+    // Rollback on network error
+    if (order) { order[type] = previousValue; updateDashboardUI(); }
     showToast('حدث خطأ أثناء التحديث', true);
   }
 }

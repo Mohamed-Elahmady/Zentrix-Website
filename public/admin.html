@@ -115,7 +115,7 @@
     <div class="login-title">Admin Panel</div>
     <div class="login-sub">Zentrix — الإدارة والإعدادات</div>
     <input type="password" id="passInput" placeholder="كلمة السر" onkeydown="if(event.key==='Enter')doLogin()" />
-    <button class="btn-login" onclick="doLogin()">دخول</button>
+    <button class="btn-login" id="loginBtn" onclick="doLogin()">دخول</button>
     <div class="login-err" id="loginErr" style="display:none;align-items:center;gap:6px;justify-content:center;">
       <svg width="15" height="15" style="color:var(--danger)"><use href="#ai-x" stroke="currentColor"/></svg>
       كلمة السر غلط
