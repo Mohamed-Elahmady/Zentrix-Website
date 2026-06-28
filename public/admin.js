@@ -567,7 +567,7 @@ async function addExpense() {
   }
 
   // ── حساب الرصيد المتاح الحالي ──
-  const totalSales = ordersList.reduce((sum, o) => sum + Number(o.totalPrice || 0), 0);
+  const totalSales = ordersList.reduce((sum, o) => sum + Number(o.product_price || 0), 0);
   const totalManual = incomeList.reduce((sum, i) => sum + Number(i.amount || 0), 0);
   const totalSpent  = expensesList.reduce((sum, e) => sum + Number(e.amount || 0), 0);
   const currentCash = totalSales + totalManual - totalSpent;

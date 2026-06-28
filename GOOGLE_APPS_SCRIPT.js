@@ -369,36 +369,26 @@ function doPost(e) {
 
     const lastRow = sheet.getLastRow();
 
+    // Keep phone as text (prevent scientific notation)
     sheet.getRange(lastRow, 4).setNumberFormat('@');
     sheet.getRange(lastRow, 5).setNumberFormat('@');
     sheet.getRange(lastRow, 4).setValue(data.phone || '');
     sheet.getRange(lastRow, 5).setValue(data.whatsapp || '');
 
+    // Checkboxes for paid columns
     sheet.getRange(lastRow, 14).insertCheckboxes();
     sheet.getRange(lastRow, 15).insertCheckboxes();
 
+    // Status dropdown
     const statusRule = SpreadsheetApp.newDataValidation()
       .requireValueInList(['Confirmed', 'Shipped', 'Delivered'], true)
       .setAllowInvalid(false)
       .build();
     sheet.getRange(lastRow, 16).setDataValidation(statusRule);
 
+    // Color coding (fast — single cell ops)
     applyStatusColor(sheet, lastRow, data.status || 'Confirmed');
     applyFlashTypeColor(sheet, lastRow, data.flash_type || 'New');
-
-    sheet.autoResizeColumns(1, 17);
-    for (let col = 1; col <= 17; col++) {
-      const currentWidth = sheet.getColumnWidth(col);
-      sheet.setColumnWidth(col, currentWidth + 20);
-    }
-
-    const allRange = sheet.getRange(1, 1, lastRow, 17);
-    allRange.setHorizontalAlignment('center');
-    allRange.setVerticalAlignment('middle');
-    allRange.setWrap(false);
-
-    sheet.setRowHeightsForced(1, 1, 35);
-    if (lastRow > 1) sheet.setRowHeightsForced(2, lastRow, 30);
 
     return ContentService
       .createTextOutput(JSON.stringify({ success: true }))

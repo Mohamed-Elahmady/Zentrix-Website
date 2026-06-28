@@ -175,21 +175,29 @@ async function getDashboardDataAsync(sheetsUrl) {
 }
 
 // ─── Google Sheets Helper ─────────────────────────────────────────────────────
+// Sends data to Google Sheets — retries once on failure to prevent lost orders
 async function sendToGoogleSheets(orderData) {
   const settings = getSettings();
   const sheetsUrl = settings.google_sheets_url;
   if (!sheetsUrl) return { success: false, reason: 'no_url' };
-  try {
-    const res = await fetch(sheetsUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(orderData)
-    });
-    return { success: res.ok };
-  } catch (e) {
-    console.error('Google Sheets error:', e.message);
-    return { success: false, reason: e.message };
+
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      const res = await fetch(sheetsUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(orderData)
+      });
+      if (res.ok) return { success: true };
+      console.warn(`Google Sheets attempt ${attempt} failed with status ${res.status}`);
+    } catch (e) {
+      console.error(`Google Sheets attempt ${attempt} error:`, e.message);
+      if (attempt === 2) return { success: false, reason: e.message };
+    }
+    // Wait 1.5s before retry
+    await new Promise(r => setTimeout(r, 1500));
   }
+  return { success: false, reason: 'max_retries' };
 }
 
 // ─── Middleware setup ─────────────────────────────────────────────────────────
@@ -287,8 +295,13 @@ app.post('/api/order', async (req, res) => {
     console.error('Error saving order locally:', e.message);
   }
 
-  sendToGoogleSheets(orderData);
-  cachedDashboardData = null; // Invalidate cache so new order is pulled
+  // Await the Google Sheets write — this ensures the order is saved before we respond
+  // (fire-and-forget was causing lost orders on Vercel serverless)
+  const sheetsResult = await sendToGoogleSheets(orderData);
+  if (!sheetsResult.success) {
+    console.warn('⚠️ Google Sheets write failed after retries — order saved locally only:', orderId);
+  }
+  cachedDashboardData = null; // Invalidate cache so new order is visible immediately
 
   res.json({
     success: true, order_id: orderId,
