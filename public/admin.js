@@ -25,8 +25,9 @@ async function doLogin() {
       const savedTab = localStorage.getItem('activeDashboardTab') || 'overview';
       switchDashboardTab(savedTab);
 
-      // Load settings and data without blocking the UI
-      loadAdminSettings();
+      // Load settings and dashboard in parallel — independent so one can't block the other
+      loadAdminSettings().catch(err => console.error('Settings load error:', err));
+      loadDashboardData();
     } else {
       errEl.textContent = data.error || 'كلمة السر غلط';
       errEl.style.display = 'block';
@@ -104,15 +105,15 @@ async function loadAdminSettings() {
 
   // Shipping grid
   const grid = document.getElementById('shipGrid');
-  grid.innerHTML = Object.entries(fullSettings.shipping).map(([gov, price]) =>
-    `<div class="ship-item">
-      <label>${gov}</label>
-      <input type="number" id="ship_${gov}" value="${price}" placeholder="0" />
-    </div>`
-  ).join('');
-
-  // Load dashboard data
-  await loadDashboardData();
+  if (fullSettings.shipping) {
+    grid.innerHTML = Object.entries(fullSettings.shipping).map(([gov, price]) =>
+      `<div class="ship-item">
+        <label>${gov}</label>
+        <input type="number" id="ship_${gov}" value="${price}" placeholder="0" />
+      </div>`
+    ).join('');
+  }
+  // loadDashboardData is called separately from doLogin — not here
 }
 
 // ── GAMES EDITOR ──────────────────────────────────────────────────────────────
