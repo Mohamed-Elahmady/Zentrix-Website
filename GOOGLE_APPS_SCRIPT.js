@@ -3,51 +3,239 @@
 // Copy this entire file into Google Apps Script and deploy as Web App
 // ═══════════════════════════════════════════════════════════════════════════════
 
+function doGet(e) {
+  try {
+    const action = e.parameter.action;
+    
+    // 1. GET SETTINGS
+    if (action === 'get_settings') {
+      const sheet = getOrCreateSheet('Zentrix Settings', ['Settings JSON']);
+      const value = sheet.getRange(2, 1).getValue();
+      let settings = {};
+      if (value) {
+        settings = JSON.parse(value);
+      }
+      return ContentService
+        .createTextOutput(JSON.stringify(settings))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    // 2. GET EXPENSES
+    if (action === 'get_expenses') {
+      const sheet = getOrCreateSheet('Zentrix Expenses', ['Expense ID', 'Amount', 'Reason', 'Timestamp']);
+      const values = sheet.getDataRange().getValues();
+      const expenses = [];
+      for (let i = 1; i < values.length; i++) {
+        const row = values[i];
+        if (!row[0]) continue;
+        expenses.push({
+          id: row[0],
+          amount: Number(row[1] || 0),
+          reason: row[2] || '',
+          timestamp: row[3] || ''
+        });
+      }
+      // Return newest first (reverse order)
+      expenses.reverse();
+      return ContentService
+        .createTextOutput(JSON.stringify(expenses))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    // 3. GET INCOME
+    if (action === 'get_income') {
+      const sheet = getOrCreateSheet('Zentrix Income', ['Income ID', 'Amount', 'Source', 'Timestamp']);
+      const values = sheet.getDataRange().getValues();
+      const income = [];
+      for (let i = 1; i < values.length; i++) {
+        const row = values[i];
+        if (!row[0]) continue;
+        income.push({
+          id: row[0],
+          amount: Number(row[1] || 0),
+          source: row[2] || '',
+          timestamp: row[3] || ''
+        });
+      }
+      // Return newest first (reverse order)
+      income.reverse();
+      return ContentService
+        .createTextOutput(JSON.stringify(income))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    // 4. GET ORDERS (Default / Fallback)
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ss.getSheetByName('Zentrix Orders');
+    if (!sheet) {
+      return ContentService
+        .createTextOutput(JSON.stringify([]))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    const values = sheet.getDataRange().getValues();
+    if (values.length <= 1) {
+      return ContentService
+        .createTextOutput(JSON.stringify([]))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    const orders = [];
+    for (let i = 1; i < values.length; i++) {
+      const row = values[i];
+      if (!row[0]) continue; // Skip empty rows
+      
+      const order = {
+        order_id:      row[0]  || '',
+        timestamp:     row[1]  || '',
+        name:          row[2]  || '',
+        phone:         row[3]  || '',
+        whatsapp:      row[4]  || '',
+        product:       row[5]  || '',
+        product_price: Number(row[6]  || 0),
+        shipping_cost: Number(row[7]  || 0),
+        total:         Number(row[8]  || 0),
+        payment:       String(row[9]  || '').toLowerCase(),
+        governorate:   row[10] || '',
+        city:          row[11] || '',
+        address:       row[12] || '',
+        shipping_paid: row[13] === true || row[13] === 'true',
+        product_paid:  row[14] === true || row[14] === 'true',
+        status:        row[15] || 'Confirmed',
+        flash_type:    row[16] || 'New'
+      };
+      orders.push(order);
+    }
+
+    // Return in reverse order (newest first)
+    orders.reverse();
+
+    return ContentService
+      .createTextOutput(JSON.stringify(orders))
+      .setMimeType(ContentService.MimeType.JSON);
+
+  } catch(err) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ success: false, error: err.message }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
 function doPost(e) {
   try {
     const data = JSON.parse(e.postData.contents);
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
-    let sheet = ss.getSheetByName('Zentrix Orders');
-
-    // Create sheet if not exists + add headers
-    if (!sheet) {
-      sheet = ss.insertSheet('Zentrix Orders');
-      const headers = [
-        'Order ID', 'Timestamp', 'Name', 'Phone', 'WhatsApp',
-        'Product', 'Product Price', 'Shipping Cost', 'Total',
-        'Payment', 'Governorate', 'City', 'Address',
-        'Shipping Paid', 'Product Paid', 'Status', 'Flash Type'
+    
+    // 1. SAVE SETTINGS
+    if (data.action === 'save_settings') {
+      const sheet = getOrCreateSheet('Zentrix Settings', ['Settings JSON']);
+      sheet.getRange(2, 1).setValue(JSON.stringify(data.settings));
+      return ContentService
+        .createTextOutput(JSON.stringify({ success: true, message: 'Settings saved successfully' }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    // 2. ADD EXPENSE
+    if (data.action === 'add_expense') {
+      const sheet = getOrCreateSheet('Zentrix Expenses', ['Expense ID', 'Amount', 'Reason', 'Timestamp']);
+      const row = [
+        data.expense.id,
+        Number(data.expense.amount),
+        data.expense.reason,
+        data.expense.timestamp
       ];
-      sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
-
-      const headerRange = sheet.getRange(1, 1, 1, headers.length);
-      headerRange.setBackground('#0d1b2e');
-      headerRange.setFontColor('#c9a84c');
-      headerRange.setFontWeight('bold');
-      headerRange.setFontSize(11);
-      headerRange.setHorizontalAlignment('center');
-      headerRange.setVerticalAlignment('middle');
-      headerRange.setWrap(false);
-      sheet.setFrozenRows(1);
-    } else {
-      // Sheet already exists — make sure col 17 header is there
-      // (handles sheets created before Flash Type column was added)
-      const col17Header = sheet.getRange(1, 17).getValue();
-      if (!col17Header || col17Header === '') {
-        const h = sheet.getRange(1, 17);
-        h.setValue('Flash Type');
-        h.setBackground('#0d1b2e');
-        h.setFontColor('#c9a84c');
-        h.setFontWeight('bold');
-        h.setFontSize(11);
-        h.setHorizontalAlignment('center');
-        h.setVerticalAlignment('middle');
-        h.setWrap(false);
+      sheet.appendRow(row);
+      return ContentService
+        .createTextOutput(JSON.stringify({ success: true, message: 'Expense added successfully' }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    // 3. DELETE EXPENSE
+    if (data.action === 'delete_expense') {
+      const sheet = getOrCreateSheet('Zentrix Expenses', ['Expense ID', 'Amount', 'Reason', 'Timestamp']);
+      const values = sheet.getDataRange().getValues();
+      let foundRow = -1;
+      for (let i = 1; i < values.length; i++) {
+        if (String(values[i][0]) === String(data.id)) {
+          foundRow = i + 1;
+          break;
+        }
+      }
+      if (foundRow !== -1) {
+        sheet.deleteRow(foundRow);
+        return ContentService
+          .createTextOutput(JSON.stringify({ success: true, message: 'Expense deleted successfully' }))
+          .setMimeType(ContentService.MimeType.JSON);
+      } else {
+        return ContentService
+          .createTextOutput(JSON.stringify({ success: false, error: 'Expense not found' }))
+          .setMimeType(ContentService.MimeType.JSON);
+      }
+    }
+    
+    // 4. ADD INCOME
+    if (data.action === 'add_income') {
+      const sheet = getOrCreateSheet('Zentrix Income', ['Income ID', 'Amount', 'Source', 'Timestamp']);
+      const row = [
+        data.income.id,
+        Number(data.income.amount),
+        data.income.source,
+        data.income.timestamp
+      ];
+      sheet.appendRow(row);
+      return ContentService
+        .createTextOutput(JSON.stringify({ success: true, message: 'Income added successfully' }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    // 5. DELETE INCOME
+    if (data.action === 'delete_income') {
+      const sheet = getOrCreateSheet('Zentrix Income', ['Income ID', 'Amount', 'Source', 'Timestamp']);
+      const values = sheet.getDataRange().getValues();
+      let foundRow = -1;
+      for (let i = 1; i < values.length; i++) {
+        if (String(values[i][0]) === String(data.id)) {
+          foundRow = i + 1;
+          break;
+        }
+      }
+      if (foundRow !== -1) {
+        sheet.deleteRow(foundRow);
+        return ContentService
+          .createTextOutput(JSON.stringify({ success: true, message: 'Income record deleted successfully' }))
+          .setMimeType(ContentService.MimeType.JSON);
+      } else {
+        return ContentService
+          .createTextOutput(JSON.stringify({ success: false, error: 'Income record not found' }))
+          .setMimeType(ContentService.MimeType.JSON);
+      }
+    }
+    
+    // 6. DELETE ORDER
+    if (data.action === 'delete_order') {
+      const sheet = getOrCreateSheet('Zentrix Orders');
+      const values = sheet.getDataRange().getValues();
+      let foundRow = -1;
+      for (let i = 1; i < values.length; i++) {
+        if (String(values[i][0]) === String(data.order_id)) {
+          foundRow = i + 1;
+          break;
+        }
+      }
+      if (foundRow !== -1) {
+        sheet.deleteRow(foundRow);
+        return ContentService
+          .createTextOutput(JSON.stringify({ success: true, message: 'Order deleted successfully' }))
+          .setMimeType(ContentService.MimeType.JSON);
+      } else {
+        return ContentService
+          .createTextOutput(JSON.stringify({ success: false, error: 'Order not found' }))
+          .setMimeType(ContentService.MimeType.JSON);
       }
     }
 
-    // Handle updates from Website Admin Panel
+    // 7. UPDATE ORDER (shipping_paid, product_paid, status)
     if (data.action === 'update') {
+      const sheet = getOrCreateSheet('Zentrix Orders');
       const values = sheet.getDataRange().getValues();
       let foundRow = -1;
       for (let i = 1; i < values.length; i++) {
@@ -77,7 +265,14 @@ function doPost(e) {
       }
     }
 
-    // Append order row
+    // 8. APPEND NEW ORDER (Default Behavior)
+    const sheet = getOrCreateSheet('Zentrix Orders', [
+      'Order ID', 'Timestamp', 'Name', 'Phone', 'WhatsApp',
+      'Product', 'Product Price', 'Shipping Cost', 'Total',
+      'Payment', 'Governorate', 'City', 'Address',
+      'Shipping Paid', 'Product Paid', 'Status', 'Flash Type'
+    ]);
+
     const row = [
       data.order_id        || '',
       data.timestamp       || new Date().toLocaleString('en-US', { timeZone: 'Africa/Cairo' }),
@@ -156,6 +351,29 @@ function doPost(e) {
   }
 }
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function getOrCreateSheet(name, headers) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName(name);
+  if (!sheet) {
+    sheet = ss.insertSheet(name);
+    if (headers && headers.length > 0) {
+      sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+      const headerRange = sheet.getRange(1, 1, 1, headers.length);
+      headerRange.setBackground('#0d1b2e');
+      headerRange.setFontColor('#c9a84c');
+      headerRange.setFontWeight('bold');
+      headerRange.setFontSize(11);
+      headerRange.setHorizontalAlignment('center');
+      headerRange.setVerticalAlignment('middle');
+      headerRange.setWrap(false);
+      sheet.setFrozenRows(1);
+    }
+  }
+  return sheet;
+}
+
 // Apply background color based on status value
 function applyStatusColor(sheet, row, status) {
   const cell = sheet.getRange(row, 16);
@@ -213,90 +431,4 @@ function fixHeaders() {
   sheet.setRowHeightsForced(1, 1, 35);
 
   Logger.log('Headers fixed — Flash Type column added in col 17.');
-}
-
-// Test function
-function testSetup() {
-  const testData = {
-    order_id: 'ZNT-TEST',
-    timestamp: new Date().toLocaleString('en-US', { timeZone: 'Africa/Cairo' }),
-    name: 'Mohamed Test',
-    phone: '01000000000',
-    whatsapp: '01000000000',
-    product: '64GB',
-    product_price: 100,
-    shipping_cost: 110,
-    total: 210,
-    payment: 'cash',
-    shipping_paid: true,
-    product_paid: false,
-    status: 'Confirmed',
-    flash_type: 'Personal',
-    governorate: 'الشرقية',
-    city: 'الزقازيق',
-    address: 'شارع مثال - عمارة 1'
-  };
-
-  const e = { postData: { contents: JSON.stringify(testData) } };
-  doPost(e);
-  Logger.log('Test order inserted!');
-}
-
-// GET request handler: returns all orders as JSON
-function doGet(e) {
-  try {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
-    const sheet = ss.getSheetByName('Zentrix Orders');
-    if (!sheet) {
-      return ContentService
-        .createTextOutput(JSON.stringify([]))
-        .setMimeType(ContentService.MimeType.JSON);
-    }
-
-    const values = sheet.getDataRange().getValues();
-    if (values.length <= 1) {
-      return ContentService
-        .createTextOutput(JSON.stringify([]))
-        .setMimeType(ContentService.MimeType.JSON);
-    }
-
-    const orders = [];
-    for (let i = 1; i < values.length; i++) {
-      const row = values[i];
-      if (!row[0]) continue; // Skip empty rows
-      
-      const order = {
-        order_id:      row[0]  || '',
-        timestamp:     row[1]  || '',
-        name:          row[2]  || '',
-        phone:         row[3]  || '',
-        whatsapp:      row[4]  || '',
-        product:       row[5]  || '',
-        product_price: Number(row[6]  || 0),
-        shipping_cost: Number(row[7]  || 0),
-        total:         Number(row[8]  || 0),
-        payment:       String(row[9]  || '').toLowerCase(),
-        governorate:   row[10] || '',
-        city:          row[11] || '',
-        address:       row[12] || '',
-        shipping_paid: row[13] === true || row[13] === 'true',
-        product_paid:  row[14] === true || row[14] === 'true',
-        status:        row[15] || 'Confirmed',
-        flash_type:    row[16] || 'New'
-      };
-      orders.push(order);
-    }
-
-    // Return in reverse order (newest first)
-    orders.reverse();
-
-    return ContentService
-      .createTextOutput(JSON.stringify(orders))
-      .setMimeType(ContentService.MimeType.JSON);
-
-  } catch(err) {
-    return ContentService
-      .createTextOutput(JSON.stringify({ success: false, error: err.message }))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
 }
