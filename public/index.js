@@ -1,8 +1,9 @@
 // ── STATE ─────────────────────────────────────────────────────────────────────
 let settings = null;
-let selectedProduct = null;   // '64gb' | '128gb' | 'custom'
+let selectedProduct = null;      // 'standard' | 'custom'
 let selectedPayment = null;
-let selectedFlashSize = null; // for custom: '16gb' | '32gb' | '64gb' | '128gb'
+let selectedStandardSize = null; // for standard: '16gb' | '32gb' | '64gb' | '128gb'
+let selectedFlashSize = null;    // for custom: '16gb' | '32gb' | '64gb' | '128gb'
 let modalProduct = null;
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
@@ -13,7 +14,6 @@ async function init() {
     renderProducts();
     populateGovDropdown();
     buildStrip();
-    // Set contact button WhatsApp link from settings
     const contactBtn = document.getElementById('headerContactBtn');
     if (contactBtn && settings.whatsapp_number) {
       contactBtn.href = `https://wa.me/${settings.whatsapp_number}`;
@@ -39,42 +39,53 @@ function renderProducts() {
   const custom = settings.products.custom;
   const sizes = custom ? custom.sizes : {};
 
-  // Standard cards
-  const standardCards = ['64gb', '128gb'].map(key => {
-    const p = settings.products[key];
-    const badges = {
-      '64gb':  `<svg width="12" height="12"><use href="#icon-usb" stroke="currentColor"/></svg> الفلاشة الأساسية`,
-      '128gb': `<svg width="12" height="12"><use href="#icon-star"/></svg> الأرشيف الكامل`
-    };
-    const isPopular = key === '128gb';
-    const priceHtml = p.price > 0
-      ? `<div class="card-price">${p.price.toLocaleString('en-US')} جنيه </div>`
-      : `<div class="card-price"><span style="font-size:.85rem;color:var(--grey)">السعر قريباً</span></div>`;
-    return `
-      <div class="product-card" id="card-${key}">
-        <div class="card-badge ${isPopular ? 'popular' : ''}">${badges[key]}</div>
-        <div class="card-size">${key.toUpperCase()}</div>
-        <div class="card-desc">${p.description}</div>
-        <div class="card-stats">
-          <div class="card-stat">
-            <div class="card-stat-num">${p.games_count}</div>
-            <div class="card-stat-label">لعبة</div>
-          </div>
-          <div class="card-stat">
-            <div class="card-stat-num">${p.consoles}</div>
-            <div class="card-stat-label">جهاز</div>
-          </div>
-        </div>
-        ${priceHtml}
-        <button class="btn-view-games" onclick="openGamesModal('${key}')">
-          <svg width="16" height="16" style="color:currentColor"><use href="#icon-gamepad" stroke="currentColor"/></svg>
-          شوف الألعاب الجوه
-        </button>
-        <button class="btn-select" onclick="selectProduct('${key}')">اختار الفلاشة ✦</button>
-      </div>`;
-  }).join('');
+  const standardKeys = ['16gb', '32gb', '64gb', '128gb'].filter(k => settings.products[k]);
 
-  // Custom card
+  // ── Standard card — single card with size selector ──
+  const stdSizeBtns = standardKeys.map(k =>
+    `<button class="size-btn" id="std-sz-${k}" onclick="selectStandardSize('${k}')">${k.toUpperCase()}</button>`
+  ).join('');
+
+  const standardCard = `
+    <div class="product-card standard-card" id="card-standard">
+      <div class="card-badge" id="standard-badge">
+        <svg width="12" height="12"><use href="#icon-usb" stroke="currentColor"/></svg>
+        اختار الحجم
+      </div>
+
+      <div class="card-size" id="standard-size" style="font-size:2rem;">Retro Flash</div>
+      <div class="card-desc" id="standard-desc">بتاخد فلاشة ريترو جاهزة — مليانة ألعاب كلاسيك من أيام زمان</div>
+
+      <div class="flash-size-selector">
+        <div class="flash-size-label">اختار حجم الفلاشة:</div>
+        <div class="size-btns">${stdSizeBtns}</div>
+      </div>
+
+      <div class="card-stats" id="standard-stats" style="display:none;">
+        <div class="card-stat">
+          <div class="card-stat-num" id="standard-games-count">—</div>
+          <div class="card-stat-label">لعبة</div>
+        </div>
+        <div class="card-stat">
+          <div class="card-stat-num" id="standard-consoles-count">—</div>
+          <div class="card-stat-label">جهاز</div>
+        </div>
+      </div>
+
+      <div class="card-price" id="standard-price" style="display:none;"></div>
+
+      <button class="btn-view-games" id="standard-games-btn" style="display:none;"
+        onclick="openGamesModal(selectedStandardSize)">
+        <svg width="16" height="16" style="color:currentColor"><use href="#icon-gamepad" stroke="currentColor"/></svg>
+        شوف الألعاب الجوه
+      </button>
+
+      <button class="btn-select" id="btn-standard-select" onclick="selectStandardProduct()" disabled>
+        اختار الفلاشة ✦
+      </button>
+    </div>`;
+
+  // ── Custom card ──
   const sizeBtnsHtml = Object.entries(sizes).map(([sz, data]) =>
     `<button class="size-btn" id="sz-${sz}" onclick="selectFlashSize('${sz}')">${data.label}</button>`
   ).join('');
@@ -105,14 +116,84 @@ function renderProducts() {
       </button>
     </div>`;
 
-  grid.innerHTML = standardCards + customCard;
+  grid.innerHTML = standardCard + customCard;
   updateCustomSelectBtn();
+}
+
+// ── STANDARD SIZE SELECTION ───────────────────────────────────────────────────
+const stdBadges = {
+  '16gb':  `<svg width="12" height="12"><use href="#icon-usb" stroke="currentColor"/></svg> الباقة الاقتصادية`,
+  '32gb':  `<svg width="12" height="12"><use href="#icon-usb" stroke="currentColor"/></svg> الباقة المتوازنة`,
+  '64gb':  `<svg width="12" height="12"><use href="#icon-usb" stroke="currentColor"/></svg> الفلاشة الأساسية`,
+  '128gb': `<svg width="12" height="12"><use href="#icon-star"/></svg> الأرشيف الكامل`
+};
+
+function selectStandardSize(key) {
+  selectedStandardSize = key;
+  const p = settings.products[key];
+
+  // update size buttons
+  document.querySelectorAll('#card-standard .size-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('std-sz-' + key)?.classList.add('active');
+
+  // badge
+  const badgeEl = document.getElementById('standard-badge');
+  badgeEl.innerHTML = stdBadges[key] || key.toUpperCase();
+  if (key === '128gb') {
+    badgeEl.classList.add('popular');
+  } else {
+    badgeEl.classList.remove('popular');
+  }
+
+  // title + desc
+  document.getElementById('standard-size').textContent = key.toUpperCase();
+  document.getElementById('standard-desc').textContent = p.description;
+
+  // stats
+  document.getElementById('standard-games-count').textContent = p.games_count;
+  document.getElementById('standard-consoles-count').textContent = p.consoles;
+  document.getElementById('standard-stats').style.display = '';
+
+  // price
+  const priceEl = document.getElementById('standard-price');
+  priceEl.style.display = '';
+  priceEl.innerHTML = p.price > 0
+    ? `${p.price.toLocaleString('en-US')} جنيه`
+    : `<span style="font-size:.85rem;color:var(--grey)">السعر قريباً</span>`;
+
+  // games button + select button
+  document.getElementById('standard-games-btn').style.display = '';
+  document.getElementById('btn-standard-select').disabled = false;
+
+  // update shipping preview if already in order section
+  if (selectedProduct === 'standard') updateShippingPreview();
+}
+
+function selectStandardProduct() {
+  if (!selectedStandardSize) return;
+  selectedProduct = 'standard';
+
+  document.querySelectorAll('.product-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('card-standard')?.classList.add('selected');
+
+  const p = settings.products[selectedStandardSize];
+  const banner = document.getElementById('selectedBanner');
+  banner.classList.remove('custom-banner');
+  document.getElementById('spbName').className = 'spb-name';
+  document.getElementById('spbName').textContent = p.label || selectedStandardSize.toUpperCase();
+  document.getElementById('spbGames').textContent = `${p.games_count} لعبة — ${p.consoles} جهاز`;
+  document.getElementById('personalFlashNotice').classList.remove('show');
+
+  const orderSec = document.getElementById('orderSection');
+  orderSec.classList.add('visible');
+  setTimeout(() => { document.getElementById('order-anchor').scrollIntoView({ behavior: 'smooth' }); }, 80);
+  updateShippingPreview();
 }
 
 // ── CUSTOM FLASH SIZE ─────────────────────────────────────────────────────────
 function selectFlashSize(sz) {
   selectedFlashSize = sz;
-  document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#card-custom .size-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('sz-' + sz)?.classList.add('active');
   updateCustomPriceDisplay();
   updateCustomSelectBtn();
@@ -160,6 +241,7 @@ function selectCustomProduct() {
 
 // ── GAMES MODAL ───────────────────────────────────────────────────────────────
 function openGamesModal(key) {
+  if (!key) return;
   modalProduct = key;
   const p = settings.products[key];
   document.getElementById('modalTitle').textContent = `ألعاب فلاشة ${key.toUpperCase()} — ${p.games_count} لعبة`;
@@ -182,31 +264,15 @@ function closeModal() {
 
 function selectFromModal() {
   closeModal();
-  if (modalProduct) selectProduct(modalProduct);
+  if (modalProduct) {
+    // Set the standard size to match modal product and trigger select
+    selectStandardSize(modalProduct);
+    selectStandardProduct();
+  }
 }
 document.getElementById('gamesModal').addEventListener('click', e => {
   if (e.target === e.currentTarget) closeModal();
 });
-
-// ── PRODUCT SELECT (standard) ─────────────────────────────────────────────────
-function selectProduct(key) {
-  selectedProduct = key;
-  document.querySelectorAll('.product-card').forEach(c => c.classList.remove('selected'));
-  document.getElementById('card-' + key)?.classList.add('selected');
-
-  const p = settings.products[key];
-  const banner = document.getElementById('selectedBanner');
-  banner.classList.remove('custom-banner');
-  document.getElementById('spbName').className = 'spb-name';
-  document.getElementById('spbName').textContent = p.label;
-  document.getElementById('spbGames').textContent = `${p.games_count} لعبة — ${p.consoles} جهاز`;
-  document.getElementById('personalFlashNotice').classList.remove('show');
-
-  const orderSec = document.getElementById('orderSection');
-  orderSec.classList.add('visible');
-  setTimeout(() => { document.getElementById('order-anchor').scrollIntoView({ behavior: 'smooth' }); }, 80);
-  updateShippingPreview();
-}
 
 // ── DROPDOWN ──────────────────────────────────────────────────────────────────
 function populateGovDropdown() {
@@ -229,9 +295,10 @@ function updateShippingPreview() {
 
   if (selectedProduct === 'custom') {
     productPrice = settings.products.custom?.sizes?.[selectedFlashSize]?.price || 0;
-    shippingCost = shippingCost * 2; // Doubled shipping for custom round trip
+    shippingCost = shippingCost * 2;
   } else {
-    productPrice = settings.products[selectedProduct].price;
+    // standard — use selectedStandardSize
+    productPrice = settings.products[selectedStandardSize]?.price || 0;
   }
 
   document.getElementById('govLabel').textContent = gov + (selectedProduct === 'custom' ? ' (شحن رايح جاي)' : '');
@@ -250,14 +317,11 @@ function selectPayment(method) {
 
 // ── PHONE VALIDATION ──────────────────────────────────────────────────────────
 function sanitizePhone(input) {
-  // Convert Arabic/Eastern-Arabic digits to English
   let v = input.value
     .replace(/[٠-٩]/g, d => d.charCodeAt(0) - 0x0660)
     .replace(/[۰-۹]/g, d => d.charCodeAt(0) - 0x06F0);
-  // Keep only digits
   v = v.replace(/[^0-9]/g, '');
   input.value = v;
-  // Clear error while typing
   const errId = input.id === 'f_phone' ? 'err_phone' : 'err_whatsapp';
   document.getElementById(errId).textContent = '';
   input.classList.remove('input-err');
@@ -266,7 +330,6 @@ function sanitizePhone(input) {
 function validatePhone(input, errId) {
   const v = input.value.trim();
   const errEl = document.getElementById(errId);
-  // Must be 11 digits starting with 01
   if (!/^01[0-9]{9}$/.test(v)) {
     errEl.textContent = 'رقم غير صحيح — أدخل 11 رقم يبدأ بـ 01';
     input.classList.add('input-err');
@@ -280,6 +343,7 @@ function validatePhone(input, errId) {
 // ── SUBMIT ────────────────────────────────────────────────────────────────────
 async function submitOrder() {
   if (!selectedProduct) return alert('اختار الفلاشة الأول');
+  if (selectedProduct === 'standard' && !selectedStandardSize) return alert('اختار حجم الفلاشة');
   if (selectedProduct === 'custom' && !selectedFlashSize) return alert('اختار حجم الفلاشة');
   if (!selectedPayment) return alert('اختار طريقة الدفع');
 
@@ -294,7 +358,6 @@ async function submitOrder() {
     return alert('من فضلك اكمل كل البيانات المطلوبة');
   }
 
-  // Validate phone formats
   const phoneOk    = validatePhone(document.getElementById('f_phone'),    'err_phone');
   const whatsappOk = validatePhone(document.getElementById('f_whatsapp'), 'err_whatsapp');
   if (!phoneOk || !whatsappOk) return;
@@ -303,10 +366,13 @@ async function submitOrder() {
   btn.disabled = true;
   btn.innerHTML = `<svg width="16" height="16" style="animation:spin 1s linear infinite"><use href="#icon-loading" stroke="currentColor"/></svg> جاري إرسال الطلب...`;
 
+  // للـ standard نبعت الـ key الفعلي (16gb, 32gb, ...) للـ server زي ما كان
+  const productKey = selectedProduct === 'standard' ? selectedStandardSize : selectedProduct;
+
   const body = {
     name, phone, whatsapp,
     governorate: gov, city, address,
-    product: selectedProduct,
+    product: productKey,
     payment: selectedPayment
   };
   if (selectedProduct === 'custom') {
@@ -383,7 +449,9 @@ function showSuccessModal(data, name, gov) {
 function resetOrder() {
   document.getElementById('successModal').classList.remove('open');
   document.body.style.overflow = '';
-  selectedProduct = null; selectedPayment = null;
+  selectedProduct = null;
+  selectedPayment = null;
+  selectedStandardSize = null;
   selectedFlashSize = null;
   document.getElementById('orderSection').classList.remove('visible');
   document.querySelectorAll('.product-card').forEach(c => c.classList.remove('selected'));

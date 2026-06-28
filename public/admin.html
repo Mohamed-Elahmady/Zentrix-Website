@@ -363,12 +363,28 @@
             </div>
             <div>
               <div class="card-head-title">أسعار الفلاشات الجاهزة</div>
-              <div class="card-head-sub">64GB و 128GB</div>
+              <div class="card-head-sub">16GB — 32GB — 64GB — 128GB</div>
             </div>
           </div>
           <div class="field">
+            <label>سعر شراء الفلاشة 16 (جنيه)</label>
+            <input type="number" id="cost16" placeholder="مثال: 80" />
+          </div>
+          <div class="field">
+            <label>سعر بيع الفلاشة 16 (جنيه)</label>
+            <input type="number" id="price16" placeholder="مثال: 200" />
+          </div>
+          <div class="field">
+            <label>سعر شراء الفلاشة 32 (جنيه)</label>
+            <input type="number" id="cost32" placeholder="مثال: 120" />
+          </div>
+          <div class="field">
+            <label>سعر بيع الفلاشة 32 (جنيه)</label>
+            <input type="number" id="price32" placeholder="مثال: 280" />
+          </div>
+          <div class="field">
             <label>سعر شراء الفلاشة 64 (جنيه)</label>
-            <input type="number" id="cost64" placeholder="مثال: 200" />
+            <input type="number" id="cost64" placeholder="مثال: 150" />
           </div>
           <div class="field">
             <label>سعر بيع الفلاشة 64 (جنيه)</label>
@@ -376,11 +392,11 @@
           </div>
           <div class="field">
             <label>سعر شراء الفلاشة 128 (جنيه)</label>
-            <input type="number" id="cost128" placeholder="مثال: 250" />
+            <input type="number" id="cost128" placeholder="مثال: 200" />
           </div>
           <div class="field">
             <label>سعر بيع الفلاشة 128 (جنيه)</label>
-            <input type="number" id="price128" placeholder="مثال: 550" />
+            <input type="number" id="price128" placeholder="مثال: 450" />
           </div>
           <button class="btn-save" onclick="savePrices()" style="display:flex;align-items:center;justify-content:center;gap:6px;">
             <svg width="14" height="14"><use href="#ai-save" stroke="var(--navy)"/></svg> حفظ الأسعار
@@ -437,7 +453,13 @@
         </div>
 
         <div class="games-editor-tabs">
-          <button class="games-tab active" onclick="switchGamesTab('64gb')" style="display:flex;align-items:center;gap:6px;">
+          <button class="games-tab active" onclick="switchGamesTab('16gb')" style="display:flex;align-items:center;gap:6px;">
+            <svg width="13" height="13"><use href="#ai-folder" stroke="currentColor"/></svg> فلاشة 16GB
+          </button>
+          <button class="games-tab" onclick="switchGamesTab('32gb')" style="display:flex;align-items:center;gap:6px;">
+            <svg width="13" height="13"><use href="#ai-folder" stroke="currentColor"/></svg> فلاشة 32GB
+          </button>
+          <button class="games-tab" onclick="switchGamesTab('64gb')" style="display:flex;align-items:center;gap:6px;">
             <svg width="13" height="13"><use href="#ai-folder" stroke="currentColor"/></svg> فلاشة 64GB
           </button>
           <button class="games-tab" onclick="switchGamesTab('128gb')" style="display:flex;align-items:center;gap:6px;">
@@ -445,7 +467,9 @@
           </button>
         </div>
 
-        <div class="games-panel active" id="gamesPanel-64gb"></div>
+        <div class="games-panel active" id="gamesPanel-16gb"></div>
+        <div class="games-panel" id="gamesPanel-32gb"></div>
+        <div class="games-panel" id="gamesPanel-64gb"></div>
         <div class="games-panel" id="gamesPanel-128gb"></div>
 
         <div class="add-console-row">

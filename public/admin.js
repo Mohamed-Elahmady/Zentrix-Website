@@ -1,6 +1,6 @@
 let adminToken = '';  // JWT token stored in memory only (not localStorage)
 let fullSettings = null;
-let activeGamesTab = '64gb';
+let activeGamesTab = '16gb';
 
 async function doLogin() {
   const pass = document.getElementById('passInput').value;
@@ -67,6 +67,10 @@ async function loadAdminSettings() {
   fullSettings = await res.json();
 
   // Standard prices
+  document.getElementById('price16').value  = fullSettings.products['16gb']?.price  || '';
+  document.getElementById('cost16').value   = fullSettings.products['16gb']?.cost   || '';
+  document.getElementById('price32').value  = fullSettings.products['32gb']?.price  || '';
+  document.getElementById('cost32').value   = fullSettings.products['32gb']?.cost   || '';
   document.getElementById('price64').value  = fullSettings.products['64gb']?.price  || '';
   document.getElementById('cost64').value   = fullSettings.products['64gb']?.cost   || '';
   document.getElementById('price128').value = fullSettings.products['128gb']?.price || '';
@@ -85,6 +89,8 @@ async function loadAdminSettings() {
   document.getElementById('sheetsUrl').value    = fullSettings.google_sheets_url || '';
 
   // Games editor
+  renderGamesEditor('16gb');
+  renderGamesEditor('32gb');
   renderGamesEditor('64gb');
   renderGamesEditor('128gb');
 
@@ -125,11 +131,15 @@ function renderConsoleEditor(key, consoleName, gamesList) {
 
 function switchGamesTab(key) {
   activeGamesTab = key;
-  document.querySelectorAll('.games-tab').forEach((t, i) => {
-    t.classList.toggle('active', (i === 0 && key === '64gb') || (i === 1 && key === '128gb'));
-  });
+  // Update panel visibility
   document.querySelectorAll('.games-panel').forEach(p => p.classList.remove('active'));
-  document.getElementById('gamesPanel-' + key).classList.add('active');
+  const panel = document.getElementById('gamesPanel-' + key);
+  if (panel) panel.classList.add('active');
+  // Update tab buttons by their onclick attribute
+  document.querySelectorAll('.games-tab').forEach(t => {
+    const fn = t.getAttribute('onclick') || '';
+    t.classList.toggle('active', fn.includes(`'${key}'`));
+  });
 }
 
 function addConsole() {
@@ -171,6 +181,10 @@ function collectGamesData(key) {
 // ── SAVE FUNCTIONS ────────────────────────────────────────────────────────────
 async function savePrices() {
   const body = {
+    price_16gb:  document.getElementById('price16').value,
+    cost_16gb:   document.getElementById('cost16').value,
+    price_32gb:  document.getElementById('price32').value,
+    cost_32gb:   document.getElementById('cost32').value,
     price_64gb:  document.getElementById('price64').value,
     cost_64gb:   document.getElementById('cost64').value,
     price_128gb: document.getElementById('price128').value,
@@ -183,12 +197,18 @@ async function savePrices() {
   });
   if (res.ok) {
     if (fullSettings) {
+      if (!fullSettings.products['16gb']) fullSettings.products['16gb'] = {};
+      if (!fullSettings.products['32gb']) fullSettings.products['32gb'] = {};
       if (!fullSettings.products['64gb']) fullSettings.products['64gb'] = {};
       if (!fullSettings.products['128gb']) fullSettings.products['128gb'] = {};
-      fullSettings.products['64gb'].price = Number(body.price_64gb);
-      fullSettings.products['64gb'].cost = Number(body.cost_64gb);
+      fullSettings.products['16gb'].price  = Number(body.price_16gb);
+      fullSettings.products['16gb'].cost   = Number(body.cost_16gb);
+      fullSettings.products['32gb'].price  = Number(body.price_32gb);
+      fullSettings.products['32gb'].cost   = Number(body.cost_32gb);
+      fullSettings.products['64gb'].price  = Number(body.price_64gb);
+      fullSettings.products['64gb'].cost   = Number(body.cost_64gb);
       fullSettings.products['128gb'].price = Number(body.price_128gb);
-      fullSettings.products['128gb'].cost = Number(body.cost_128gb);
+      fullSettings.products['128gb'].cost  = Number(body.cost_128gb);
     }
     showToast('تم حفظ الأسعار');
     await loadDashboardData();
@@ -227,9 +247,11 @@ async function saveContact() {
 }
 
 async function saveGames() {
+  const games_16gb  = collectGamesData('16gb');
+  const games_32gb  = collectGamesData('32gb');
   const games_64gb  = collectGamesData('64gb');
   const games_128gb = collectGamesData('128gb');
-  const body = { games_64gb, games_128gb };
+  const body = { games_16gb, games_32gb, games_64gb, games_128gb };
   const res = await fetch('/api/admin/settings', {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken },
@@ -237,6 +259,8 @@ async function saveGames() {
   });
   if (res.ok) {
     // Update local state
+    fullSettings.products['16gb'].games  = games_16gb;
+    fullSettings.products['32gb'].games  = games_32gb;
     fullSettings.products['64gb'].games  = games_64gb;
     fullSettings.products['128gb'].games = games_128gb;
     showToast('تم حفظ الألعاب');
@@ -302,7 +326,11 @@ function updateDashboardUI() {
       totalSalesIncome += Number(order.product_price || 0);
       const isNewFlash = order.flash_type === 'New';
       if (isNewFlash && order.product) {
-        if (order.product.includes('64GB')) {
+        if (order.product.includes('16GB')) {
+          totalCostOfGoods += Number(fullSettings?.products['16gb']?.cost || 0);
+        } else if (order.product.includes('32GB')) {
+          totalCostOfGoods += Number(fullSettings?.products['32gb']?.cost || 0);
+        } else if (order.product.includes('64GB')) {
           totalCostOfGoods += Number(fullSettings?.products['64gb']?.cost || 0);
         } else if (order.product.includes('128GB')) {
           totalCostOfGoods += Number(fullSettings?.products['128gb']?.cost || 0);

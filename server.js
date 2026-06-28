@@ -627,16 +627,26 @@ app.delete('/api/admin/income/:id', requireAuth, async (req, res) => {
 app.put('/api/admin/settings', requireAuth, (req, res) => {
   const settings = getSettings();
   const {
+    price_16gb, cost_16gb,
+    price_32gb, cost_32gb,
     price_64gb, price_128gb, cost_64gb, cost_128gb,
     custom_price_16gb, custom_price_32gb, custom_price_64gb, custom_price_128gb,
     whatsapp_number, instapay_link, google_sheets_url,
-    games_64gb, games_128gb
+    games_16gb, games_32gb, games_64gb, games_128gb
   } = req.body;
 
+  // Standard products — ensure objects exist before setting
+  if (!settings.products['16gb']) settings.products['16gb'] = {};
+  if (!settings.products['32gb']) settings.products['32gb'] = {};
+
+  if (price_16gb !== undefined) settings.products['16gb'].price = Number(price_16gb);
+  if (cost_16gb  !== undefined) settings.products['16gb'].cost  = Number(cost_16gb);
+  if (price_32gb !== undefined) settings.products['32gb'].price = Number(price_32gb);
+  if (cost_32gb  !== undefined) settings.products['32gb'].cost  = Number(cost_32gb);
   if (price_64gb !== undefined) settings.products['64gb'].price = Number(price_64gb);
+  if (cost_64gb  !== undefined) settings.products['64gb'].cost  = Number(cost_64gb);
   if (price_128gb !== undefined) settings.products['128gb'].price = Number(price_128gb);
-  if (cost_64gb !== undefined) settings.products['64gb'].cost = Number(cost_64gb);
-  if (cost_128gb !== undefined) settings.products['128gb'].cost = Number(cost_128gb);
+  if (cost_128gb  !== undefined) settings.products['128gb'].cost  = Number(cost_128gb);
 
   if (!settings.products.custom) settings.products.custom = { sizes: {} };
   if (!settings.products.custom.sizes) settings.products.custom.sizes = {};
@@ -648,7 +658,9 @@ app.put('/api/admin/settings', requireAuth, (req, res) => {
   if (whatsapp_number) settings.whatsapp_number = whatsapp_number;
   if (instapay_link) settings.instapay_link = instapay_link;
   if (google_sheets_url !== undefined) settings.google_sheets_url = google_sheets_url;
-  if (games_64gb && typeof games_64gb === 'object') settings.products['64gb'].games = games_64gb;
+  if (games_16gb  && typeof games_16gb  === 'object') settings.products['16gb'].games  = games_16gb;
+  if (games_32gb  && typeof games_32gb  === 'object') settings.products['32gb'].games  = games_32gb;
+  if (games_64gb  && typeof games_64gb  === 'object') settings.products['64gb'].games  = games_64gb;
   if (games_128gb && typeof games_128gb === 'object') settings.products['128gb'].games = games_128gb;
 
   saveSettings(settings);

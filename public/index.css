@@ -1,4 +1,4 @@
-    :root {
+:root {
       --navy:      #0d1b2e;
       --navy-mid:  #152238;
       --navy-light:#1e3250;
@@ -69,7 +69,7 @@
 
     /* PRODUCT CARDS */
     .products { padding: 0 5% 80px; }
-    .cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 28px; max-width: 980px; margin: 0 auto; }
+    .cards-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 28px; max-width: 900px; margin: 0 auto; }
     .product-card { background: var(--navy-mid); border: 1px solid rgba(201,168,76,.2); border-radius: 20px; padding: 32px 28px; cursor: pointer; transition: all .3s ease; position: relative; overflow: hidden; }
     .product-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--gold), transparent); opacity: 0; transition: opacity .3s; }
     .product-card:hover, .product-card.selected { border-color: var(--gold); transform: translateY(-4px); box-shadow: 0 20px 50px rgba(0,0,0,.5), 0 0 30px rgba(201,168,76,.1); }
@@ -80,6 +80,12 @@
     .product-card.custom-card { border-color: rgba(124,58,237,.35); }
     .product-card.custom-card::before { background: linear-gradient(90deg, transparent, var(--purple), transparent); }
     .product-card.custom-card:hover, .product-card.custom-card.selected { border-color: var(--purple); box-shadow: 0 20px 50px rgba(0,0,0,.5), 0 0 30px rgba(124,58,237,.15); }
+
+    /* Standard card — size selector style */
+    .product-card.standard-card #standard-size { transition: all .25s ease; }
+    .product-card.standard-card #standard-desc { transition: all .25s ease; }
+    .product-card.standard-card #standard-stats { transition: opacity .2s ease; }
+    .product-card.standard-card #standard-price { transition: all .25s ease; }
 
     .card-badge { display: inline-flex; align-items: center; gap: 5px; background: rgba(201,168,76,.15); border: 1px solid rgba(201,168,76,.4); color: var(--gold); font-size: .7rem; padding: 3px 12px; border-radius: 20px; letter-spacing: 2px; margin-bottom: 20px; }
     .card-badge.popular { background: rgba(201,168,76,.25); border-color: var(--gold); }
@@ -109,6 +115,9 @@
     }
     .size-btn:hover { border-color: rgba(124,58,237,.5); color: #a78bfa; }
     .size-btn.active { background: rgba(124,58,237,.2); border-color: var(--purple); color: #c4b5fd; font-weight: 700; }
+    /* Standard card uses gold active state */
+    #card-standard .size-btn.active { background: rgba(201,168,76,.15); border-color: var(--gold); color: var(--gold); font-weight: 700; }
+    #card-standard .size-btn:hover { border-color: rgba(201,168,76,.5); color: var(--gold); }
     .custom-price-display { font-size: 1.6rem; color: #a78bfa; font-weight: 700; margin-bottom: 16px; min-height: 2.2rem; }
 
 

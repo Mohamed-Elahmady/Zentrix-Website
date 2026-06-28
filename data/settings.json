@@ -1,12 +1,42 @@
 {
   "products": {
+    "16gb": {
+      "price": 200,
+      "cost": 80,
+      "label": "16GB Flash",
+      "games_count": "2,000+",
+      "consoles": 12,
+      "description": "مثالية للأجهزة القديمة — ألعاب 8-bit و 16-bit الكلاسيكية",
+      "games": {
+        "Windows": [
+          "Claw",
+          "Alaa Eldin",
+          "Lion King"
+        ]
+      }
+    },
+    "32gb": {
+      "price": 280,
+      "cost": 120,
+      "label": "32GB Flash",
+      "games_count": "4,000+",
+      "consoles": 20,
+      "description": "باقة متوازنة — PS1 و SNES و Sega وأكتر",
+      "games": {
+        "Windows": [
+          "Claw",
+          "Alaa Eldin",
+          "Lion King"
+        ]
+      }
+    },
     "64gb": {
       "price": 350,
       "cost": 150,
       "label": "64GB Flash",
       "games_count": "6,500+",
       "consoles": 28,
-      "description": "مثالية للبداية - أشهر الألعاب الكلاسيكية",
+      "description": "مثالية للبداية — أشهر الألعاب الكلاسيكية",
       "games": {
         "Windows": [
           "Claw",
@@ -21,7 +51,7 @@
       "label": "128GB Flash",
       "games_count": "12,500+",
       "consoles": 45,
-      "description": "الأرشيف الكامل - كل شيء في مكان واحد",
+      "description": "الأرشيف الكامل — كل شيء في مكان واحد",
       "games": {
         "Windows": [
           "Claw",
