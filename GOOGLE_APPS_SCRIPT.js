@@ -7,7 +7,82 @@ function doGet(e) {
   try {
     const action = e.parameter.action;
     
-    // 1. GET SETTINGS
+    // 1. GET ALL DASHBOARD DATA (Combined to prevent Vercel timeouts)
+    if (action === 'get_dashboard') {
+      const ordersSheet = getOrCreateSheet('Zentrix Orders');
+      const expensesSheet = getOrCreateSheet('Zentrix Expenses', ['Expense ID', 'Amount', 'Reason', 'Timestamp']);
+      const incomeSheet = getOrCreateSheet('Zentrix Income', ['Income ID', 'Amount', 'Source', 'Timestamp']);
+
+      // A. Parse Orders
+      const ordersValues = ordersSheet.getDataRange().getValues();
+      const orders = [];
+      if (ordersValues.length > 1) {
+        for (let i = 1; i < ordersValues.length; i++) {
+          const row = ordersValues[i];
+          if (!row[0]) continue;
+          orders.push({
+            order_id:      row[0]  || '',
+            timestamp:     row[1]  || '',
+            name:          row[2]  || '',
+            phone:         row[3]  || '',
+            whatsapp:      row[4]  || '',
+            product:       row[5]  || '',
+            product_price: Number(row[6]  || 0),
+            shipping_cost: Number(row[7]  || 0),
+            total:         Number(row[8]  || 0),
+            payment:       String(row[9]  || '').toLowerCase(),
+            governorate:   row[10] || '',
+            city:          row[11] || '',
+            address:       row[12] || '',
+            shipping_paid: row[13] === true || row[13] === 'true',
+            product_paid:  row[14] === true || row[14] === 'true',
+            status:        row[15] || 'Confirmed',
+            flash_type:    row[16] || 'New'
+          });
+        }
+        orders.reverse();
+      }
+
+      // B. Parse Expenses
+      const expensesValues = expensesSheet.getDataRange().getValues();
+      const expenses = [];
+      if (expensesValues.length > 1) {
+        for (let i = 1; i < expensesValues.length; i++) {
+          const row = expensesValues[i];
+          if (!row[0]) continue;
+          expenses.push({
+            id: row[0],
+            amount: Number(row[1] || 0),
+            reason: row[2] || '',
+            timestamp: row[3] || ''
+          });
+        }
+        expenses.reverse();
+      }
+
+      // C. Parse Income
+      const incomeValues = incomeSheet.getDataRange().getValues();
+      const income = [];
+      if (incomeValues.length > 1) {
+        for (let i = 1; i < incomeValues.length; i++) {
+          const row = incomeValues[i];
+          if (!row[0]) continue;
+          income.push({
+            id: row[0],
+            amount: Number(row[1] || 0),
+            source: row[2] || '',
+            timestamp: row[3] || ''
+          });
+        }
+        income.reverse();
+      }
+
+      return ContentService
+        .createTextOutput(JSON.stringify({ orders, expenses, income }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    // 2. GET SETTINGS
     if (action === 'get_settings') {
       const sheet = getOrCreateSheet('Zentrix Settings', ['Settings JSON']);
       const value = sheet.getRange(2, 1).getValue();
@@ -20,7 +95,7 @@ function doGet(e) {
         .setMimeType(ContentService.MimeType.JSON);
     }
     
-    // 2. GET EXPENSES
+    // 3. GET EXPENSES (Single Sheet Fetch)
     if (action === 'get_expenses') {
       const sheet = getOrCreateSheet('Zentrix Expenses', ['Expense ID', 'Amount', 'Reason', 'Timestamp']);
       const values = sheet.getDataRange().getValues();
@@ -35,14 +110,13 @@ function doGet(e) {
           timestamp: row[3] || ''
         });
       }
-      // Return newest first (reverse order)
       expenses.reverse();
       return ContentService
         .createTextOutput(JSON.stringify(expenses))
         .setMimeType(ContentService.MimeType.JSON);
     }
     
-    // 3. GET INCOME
+    // 4. GET INCOME (Single Sheet Fetch)
     if (action === 'get_income') {
       const sheet = getOrCreateSheet('Zentrix Income', ['Income ID', 'Amount', 'Source', 'Timestamp']);
       const values = sheet.getDataRange().getValues();
@@ -57,14 +131,13 @@ function doGet(e) {
           timestamp: row[3] || ''
         });
       }
-      // Return newest first (reverse order)
       income.reverse();
       return ContentService
         .createTextOutput(JSON.stringify(income))
         .setMimeType(ContentService.MimeType.JSON);
     }
     
-    // 4. GET ORDERS (Default / Fallback)
+    // 5. GET ORDERS (Default / Fallback)
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     const sheet = ss.getSheetByName('Zentrix Orders');
     if (!sheet) {
@@ -107,7 +180,6 @@ function doGet(e) {
       orders.push(order);
     }
 
-    // Return in reverse order (newest first)
     orders.reverse();
 
     return ContentService
@@ -287,9 +359,8 @@ function doPost(e) {
       data.governorate     || '',
       data.city            || '',
       data.address         || '',
-      // Both always start unchecked — admin manually checks when payment is confirmed
-      false,   // shipping_paid (col 14)
-      false,   // product_paid  (col 15)
+      false,   // shipping_paid
+      false,   // product_paid
       data.status          || 'Confirmed',
       data.flash_type      || 'New'
     ];
@@ -298,45 +369,34 @@ function doPost(e) {
 
     const lastRow = sheet.getLastRow();
 
-    // Force phone & whatsapp cols (4, 5) to plain text so '+20 ...' doesn't parse as formula
     sheet.getRange(lastRow, 4).setNumberFormat('@');
     sheet.getRange(lastRow, 5).setNumberFormat('@');
     sheet.getRange(lastRow, 4).setValue(data.phone || '');
     sheet.getRange(lastRow, 5).setValue(data.whatsapp || '');
 
-    // Insert checkboxes in Shipping Paid (col 14) and Product Paid (col 15)
     sheet.getRange(lastRow, 14).insertCheckboxes();
     sheet.getRange(lastRow, 15).insertCheckboxes();
 
-    // Dropdown validation for Status column (col 16)
     const statusRule = SpreadsheetApp.newDataValidation()
       .requireValueInList(['Confirmed', 'Shipped', 'Delivered'], true)
       .setAllowInvalid(false)
       .build();
     sheet.getRange(lastRow, 16).setDataValidation(statusRule);
 
-    // Color-code the status cell
     applyStatusColor(sheet, lastRow, data.status || 'Confirmed');
-
-    // Color-code Flash Type cell (col 17)
     applyFlashTypeColor(sheet, lastRow, data.flash_type || 'New');
 
-    // Auto-resize all columns to fit content (17 cols)
     sheet.autoResizeColumns(1, 17);
-
-    // Add 20px padding to each column
     for (let col = 1; col <= 17; col++) {
       const currentWidth = sheet.getColumnWidth(col);
       sheet.setColumnWidth(col, currentWidth + 20);
     }
 
-    // Center + middle align everything, no wrap
     const allRange = sheet.getRange(1, 1, lastRow, 17);
     allRange.setHorizontalAlignment('center');
     allRange.setVerticalAlignment('middle');
     allRange.setWrap(false);
 
-    // Compact row heights
     sheet.setRowHeightsForced(1, 1, 35);
     if (lastRow > 1) sheet.setRowHeightsForced(2, lastRow, 30);
 
@@ -374,7 +434,6 @@ function getOrCreateSheet(name, headers) {
   return sheet;
 }
 
-// Apply background color based on status value
 function applyStatusColor(sheet, row, status) {
   const cell = sheet.getRange(row, 16);
   const colors = {
@@ -392,7 +451,6 @@ function applyStatusColor(sheet, row, status) {
   cell.setFontWeight('bold');
 }
 
-// Apply color to Flash Type column (col 17)
 function applyFlashTypeColor(sheet, row, flashType) {
   const cell = sheet.getRange(row, 17);
   if (flashType === 'Personal') {
@@ -405,7 +463,6 @@ function applyFlashTypeColor(sheet, row, flashType) {
   cell.setFontWeight('bold');
 }
 
-// Fix headers — run once manually to fix/update all headers including Flash Type
 function fixHeaders() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName('Zentrix Orders');
