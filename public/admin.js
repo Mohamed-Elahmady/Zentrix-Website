@@ -322,7 +322,7 @@ function updateDashboardUI() {
   });
 
   const totalIncome = totalSalesIncome; // used in stats cards (products revenue)
-  const netProfit = totalSalesIncome - totalCostOfGoods - totalExpenses;
+  const netProfit = totalSalesIncome - totalCostOfGoods;
   const totalIncomeWithShipping = totalSalesIncome + totalShipping;
   
   // cash on hand = sales income + manual income - expenses
