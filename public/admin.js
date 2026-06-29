@@ -25,9 +25,10 @@ async function doLogin() {
       const savedTab = localStorage.getItem('activeDashboardTab') || 'overview';
       switchDashboardTab(savedTab);
 
-      // Load settings and dashboard in parallel — independent so one can't block the other
-      loadAdminSettings().catch(err => console.error('Settings load error:', err));
-      loadDashboardData();
+      // Load settings first, then dashboard — fullSettings must exist before updateDashboardUI()
+      loadAdminSettings()
+        .catch(err => console.error('Settings load error:', err))
+        .finally(() => loadDashboardData());
     } else {
       errEl.textContent = data.error || 'كلمة السر غلط';
       errEl.style.display = 'block';
