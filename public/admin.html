@@ -99,6 +99,11 @@
     <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
     <polyline points="22,6 12,13 2,6"/>
   </symbol>
+  <symbol id="ai-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M23 4v6h-6"/>
+    <path d="M1 20v-6h6"/>
+    <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+  </symbol>
   <symbol id="ai-joystick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
     <path d="M12 2a4 4 0 014 4v6H8V6a4 4 0 014-4z"/>
     <path d="M8 12l-3 8h14l-3-8"/>
@@ -151,6 +156,10 @@
       </button>
       <button class="dashboard-tab" data-tab="contact" onclick="switchDashboardTab('contact')">
         <svg width="15" height="15"><use href="#ai-phone" stroke="currentColor"/></svg> بيانات التواصل
+      </button>
+      <button class="btn-refresh-dash" id="refreshDashboardBtn" onclick="refreshDashboard()" title="تحديث البيانات من Google Sheets">
+        <svg width="15" height="15" id="refreshDashboardIcon"><use href="#ai-refresh" stroke="currentColor"/></svg>
+        تحديث
       </button>
     </div>
 

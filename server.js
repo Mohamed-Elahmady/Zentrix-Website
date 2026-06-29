@@ -381,6 +381,25 @@ app.post('/api/admin/login', checkRateLimit, (req, res) => {
 });
 
 // ─── Admin API (protected by JWT) ────────────────────────────────────────────
+// ─── Force-refresh endpoint — invalidates cache and fetches fresh data immediately ──
+app.post('/api/admin/dashboard/refresh', requireAuth, async (req, res) => {
+  const settings = getSettings();
+  const sheetsUrl = settings.google_sheets_url;
+  if (!sheetsUrl) return res.status(400).json({ error: 'no_sheets_url' });
+
+  // Invalidate cache so getDashboardDataAsync does a fresh fetch (not stale-while-revalidate)
+  cachedDashboardData = null;
+  lastDashboardFetchTime = 0;
+  activeDashboardPromise = null;
+
+  try {
+    const data = await getDashboardDataAsync(sheetsUrl);
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: 'fetch_failed' });
+  }
+});
+
 // ─── Combined Dashboard endpoint — single call returns orders+expenses+income ──
 app.get('/api/admin/dashboard', requireAuth, async (req, res) => {
   const settings = getSettings();

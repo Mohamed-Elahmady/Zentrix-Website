@@ -72,6 +72,38 @@
       color: var(--gold);
       box-shadow: 0 4px 15px rgba(201,168,76,.08);
     }
+    .btn-refresh-dash {
+      margin-right: auto;
+      padding: 10px 18px;
+      background: rgba(45,140,240,.08);
+      border: 1px solid rgba(45,140,240,.25);
+      border-radius: 12px;
+      color: var(--blue);
+      font-family: 'Tajawal', sans-serif;
+      font-size: .9rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      transition: all .25s ease;
+      white-space: nowrap;
+    }
+    .btn-refresh-dash:hover {
+      background: rgba(45,140,240,.15);
+      border-color: var(--blue);
+    }
+    .btn-refresh-dash:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+    }
+    .btn-refresh-dash.spinning svg {
+      animation: spinIcon .8s linear infinite;
+    }
+    @keyframes spinIcon {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
     .tab-content {
       display: none;
     }

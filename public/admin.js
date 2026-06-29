@@ -326,6 +326,28 @@ async function loadDashboardData() {
   }
 }
 
+async function refreshDashboard() {
+  const btn = document.getElementById('refreshDashboardBtn');
+  if (btn) { btn.disabled = true; btn.classList.add('spinning'); }
+  try {
+    const res = await fetch('/api/admin/dashboard/refresh', {
+      method: 'POST',
+      headers: { 'x-admin-token': adminToken }
+    });
+    if (!res.ok) throw new Error('Refresh failed');
+    const data = await res.json();
+    ordersList   = Array.isArray(data.orders)   ? data.orders   : [];
+    expensesList = Array.isArray(data.expenses)  ? data.expenses : [];
+    incomeList   = Array.isArray(data.income)    ? data.income   : [];
+    updateDashboardUI();
+    showToast('تم تحديث البيانات من Google Sheets ✓');
+  } catch(e) {
+    showToast('تعذّر التحديث — تحقق من الاتصال', true);
+  } finally {
+    if (btn) { btn.disabled = false; btn.classList.remove('spinning'); }
+  }
+}
+
 function updateDashboardUI() {
   // 1. Calculate stats
   let totalSalesIncome = 0; // product revenue from orders
