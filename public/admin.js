@@ -40,22 +40,14 @@ async function doLogin() {
 }
 
 function switchDashboardTab(tabId) {
-  // Update tabs buttons active status
+  // Update tab button active state
   document.querySelectorAll('.dashboard-tab').forEach(btn => {
     btn.classList.toggle('active', btn.getAttribute('data-tab') === tabId);
   });
-  // Update content active status
-  document.querySelectorAll('.tab-content').forEach(content => {
-    if (content.id === `tab-content-${tabId}`) {
-      content.style.display = tabId === 'prices' ? 'grid' : 'block';
-      content.classList.add('active');
-    } else {
-      content.style.display = 'none';
-      content.classList.remove('active');
-    }
+  // Use CSS class toggling only — avoids triggering layout reflow from display:none/block
+  document.querySelectorAll('.tab-content').forEach(el => {
+    el.classList.toggle('active', el.id === `tab-content-${tabId}`);
   });
-  
-  // Save active tab in localStorage
   localStorage.setItem('activeDashboardTab', tabId);
 }
 
@@ -309,8 +301,16 @@ let incomeList = [];
 let financeChart = null;
 
 async function loadDashboardData() {
+  // Show skeleton loading state immediately
+  const ordersBody = document.getElementById('ordersTableBody');
+  const expBody = document.getElementById('expensesTableBody');
+  const incBody = document.getElementById('incomeTableBody');
+  const skeletonRow = (cols) => `<tr>${Array(cols).fill('<td><span class="skel"></span></td>').join('')}</tr>`;
+  if (ordersBody && ordersList.length === 0) ordersBody.innerHTML = skeletonRow(8).repeat(3);
+  if (expBody && expensesList.length === 0) expBody.innerHTML = skeletonRow(4).repeat(2);
+  if (incBody && incomeList.length === 0) incBody.innerHTML = skeletonRow(4).repeat(2);
+
   try {
-    // Single combined request — avoids 3 parallel fetches and race conditions
     const res = await fetch('/api/admin/dashboard', { headers: { 'x-admin-token': adminToken } });
     if (!res.ok) throw new Error('Dashboard fetch failed');
     const data = await res.json();
@@ -321,7 +321,6 @@ async function loadDashboardData() {
   } catch(e) {
     console.error('Error loading dashboard data:', e);
     showToast('تعذّر تحميل البيانات — جاري إعادة المحاولة...', true);
-    // Retry once after 3 seconds
     setTimeout(loadDashboardData, 3000);
   }
 }
@@ -465,60 +464,64 @@ function updateDashboardUI() {
     }).join('');
   }
   
-  // 4. Update Chart
-  const ctx = document.getElementById('financeChart').getContext('2d');
+  // 4. Update Chart — update in-place instead of destroy+recreate every time
+  const newChartData = [totalIncomeWithShipping, totalIncome, netProfit, totalExpenses, cashOnHand, totalManualIncome];
   if (financeChart) {
-    financeChart.destroy();
-  }
-  financeChart = new Chart(ctx, {
-    type: 'doughnut',
-    data: {
-      labels: ['إجمالي الإيرادات بالشحن', 'إجمالي الإيرادات', 'صافي الأرباح', 'إجمالي المصاريف', 'الفلوس اللي معايا', 'رأس المال / تمويل'],
-      datasets: [{
-        label: 'المبلغ بـ EGP',
-        data: [totalIncomeWithShipping, totalIncome, netProfit, totalExpenses, cashOnHand, totalManualIncome],
-        backgroundColor: [
-          'rgba(45, 140, 240, 0.45)',
-          'rgba(201, 168, 76, 0.45)',
-          'rgba(39, 174, 96, 0.45)',
-          'rgba(192, 57, 43, 0.45)',
-          'rgba(124, 58, 237, 0.45)',
-          'rgba(249, 115, 22, 0.45)'
-        ],
-        borderColor: [
-          '#2d8cf0',
-          '#c9a84c',
-          '#27ae60',
-          '#c0392b',
-          '#7c3aed',
-          '#f97316'
-        ],
-        borderWidth: 1.5
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      cutout: '70%',
-      plugins: {
-        legend: {
-          display: true,
-          position: 'bottom',
-          labels: {
-            color: '#f0e8d8',
-            font: { family: 'Tajawal', size: 12 }
-          }
-        },
-        tooltip: {
-          callbacks: {
-            label: function(context) {
-              return ' ' + context.label + ': EGP ' + context.raw.toLocaleString('en-US');
+    financeChart.data.datasets[0].data = newChartData;
+    financeChart.update('none'); // skip animation on data update = instant
+  } else {
+    const ctx = document.getElementById('financeChart').getContext('2d');
+    financeChart = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['إجمالي الإيرادات بالشحن', 'إجمالي الإيرادات', 'صافي الأرباح', 'إجمالي المصاريف', 'الفلوس اللي معايا', 'رأس المال / تمويل'],
+        datasets: [{
+          label: 'المبلغ بـ EGP',
+          data: newChartData,
+          backgroundColor: [
+            'rgba(45, 140, 240, 0.45)',
+            'rgba(201, 168, 76, 0.45)',
+            'rgba(39, 174, 96, 0.45)',
+            'rgba(192, 57, 43, 0.45)',
+            'rgba(124, 58, 237, 0.45)',
+            'rgba(249, 115, 22, 0.45)'
+          ],
+          borderColor: [
+            '#2d8cf0',
+            '#c9a84c',
+            '#27ae60',
+            '#c0392b',
+            '#7c3aed',
+            '#f97316'
+          ],
+          borderWidth: 1.5
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '70%',
+        animation: { duration: 400 },
+        plugins: {
+          legend: {
+            display: true,
+            position: 'bottom',
+            labels: {
+              color: '#f0e8d8',
+              font: { family: 'Tajawal', size: 12 }
+            }
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return ' ' + context.label + ': EGP ' + context.raw.toLocaleString('en-US');
+              }
             }
           }
         }
       }
-    }
-  });
+    });
+  }
 }
 
 async function toggleOrderPayment(orderId, type, checked) {

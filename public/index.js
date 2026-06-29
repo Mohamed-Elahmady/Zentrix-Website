@@ -186,7 +186,12 @@ function selectStandardProduct() {
 
   const orderSec = document.getElementById('orderSection');
   orderSec.classList.add('visible');
-  setTimeout(() => { document.getElementById('order-anchor').scrollIntoView({ behavior: 'smooth' }); }, 80);
+  // Use requestAnimationFrame instead of setTimeout — fires exactly after browser paint
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      document.getElementById('order-anchor').scrollIntoView({ behavior: 'smooth' });
+    });
+  });
   updateShippingPreview();
 }
 
@@ -235,7 +240,11 @@ function selectCustomProduct() {
 
   const orderSec = document.getElementById('orderSection');
   orderSec.classList.add('visible');
-  setTimeout(() => { document.getElementById('order-anchor').scrollIntoView({ behavior: 'smooth' }); }, 80);
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      document.getElementById('order-anchor').scrollIntoView({ behavior: 'smooth' });
+    });
+  });
   updateShippingPreview();
 }
 

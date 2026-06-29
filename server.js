@@ -119,7 +119,7 @@ function checkRateLimit(req, res, next) {
 // ─── Combined Dashboard Cache (Combines parallel queries, avoids timeouts) ─────
 let cachedDashboardData = null;
 let lastDashboardFetchTime = 0;
-const DASHBOARD_CACHE_TTL = 8 * 1000; // 8 seconds cache
+const DASHBOARD_CACHE_TTL = 5 * 60 * 1000; // 5 minutes cache
 let activeDashboardPromise = null;
 
 function readLocalCacheFile(filename) {
@@ -134,26 +134,70 @@ function readLocalCacheFile(filename) {
   return [];
 }
 
+async function fetchWithTimeout(url, timeoutMs = 25000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, { signal: controller.signal });
+    return res;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function getDashboardDataAsync(sheetsUrl) {
   const now = Date.now();
-  if (cachedDashboardData && (now - lastDashboardFetchTime < DASHBOARD_CACHE_TTL)) {
+  const cacheAge = now - lastDashboardFetchTime;
+  const hasCache = cachedDashboardData !== null;
+
+  // Cache still fresh — return immediately
+  if (hasCache && cacheAge < DASHBOARD_CACHE_TTL) {
     return cachedDashboardData;
   }
 
+  // Stale-while-revalidate: if cache exists but is stale,
+  // return it instantly and refresh in background
+  if (hasCache && !activeDashboardPromise) {
+    activeDashboardPromise = (async () => {
+      try {
+        const response = await fetchWithTimeout(`${sheetsUrl}?action=get_dashboard`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data && typeof data === 'object' && !data.error) {
+            cachedDashboardData = {
+              orders:   Array.isArray(data.orders)   ? data.orders   : [],
+              expenses: Array.isArray(data.expenses) ? data.expenses : [],
+              income:   Array.isArray(data.income)   ? data.income   : []
+            };
+            lastDashboardFetchTime = Date.now();
+            console.log('✅ Dashboard cache refreshed in background');
+          }
+        }
+      } catch (err) {
+        console.warn('⚠️ Background dashboard refresh failed:', err.message);
+      } finally {
+        activeDashboardPromise = null;
+      }
+    })();
+    // Return stale cache immediately — don't wait
+    return cachedDashboardData;
+  }
+
+  // No cache at all — must wait for first fetch
   if (activeDashboardPromise) {
     return activeDashboardPromise;
   }
 
   activeDashboardPromise = (async () => {
     try {
-      const response = await fetch(`${sheetsUrl}?action=get_dashboard`);
+      const response = await fetchWithTimeout(`${sheetsUrl}?action=get_dashboard`);
       if (response.ok) {
         const data = await response.json();
         if (data && typeof data === 'object' && !data.error) {
           cachedDashboardData = {
-            orders: Array.isArray(data.orders) ? data.orders : [],
+            orders:   Array.isArray(data.orders)   ? data.orders   : [],
             expenses: Array.isArray(data.expenses) ? data.expenses : [],
-            income: Array.isArray(data.income) ? data.income : []
+            income:   Array.isArray(data.income)   ? data.income   : []
           };
           lastDashboardFetchTime = Date.now();
           return cachedDashboardData;
@@ -165,9 +209,9 @@ async function getDashboardDataAsync(sheetsUrl) {
       activeDashboardPromise = null;
     }
     return cachedDashboardData || {
-      orders: readLocalCacheFile('orders.json'),
+      orders:   readLocalCacheFile('orders.json'),
       expenses: readLocalCacheFile('expenses.json'),
-      income: readLocalCacheFile('income.json')
+      income:   readLocalCacheFile('income.json')
     };
   })();
 
@@ -703,7 +747,46 @@ app.put('/api/admin/shipping', requireAuth, (req, res) => {
   res.json({ success: true });
 });
 
-// ─── Serve Pages ──────────────────────────────────────────────────────────────
+// ─── Warmup Endpoint (call from cron / UptimeRobot to prevent cold starts) ────
+app.get('/api/warmup', async (req, res) => {
+  const settings = getSettings();
+  const sheetsUrl = settings.google_sheets_url;
+  if (!sheetsUrl) return res.json({ ok: true, cached: false, reason: 'no_sheets_url' });
+
+  // If cache is fresh, nothing to do
+  const cacheAge = Date.now() - lastDashboardFetchTime;
+  if (cachedDashboardData && cacheAge < DASHBOARD_CACHE_TTL) {
+    return res.json({ ok: true, cached: true, age_seconds: Math.floor(cacheAge / 1000) });
+  }
+
+  // Trigger a refresh in background and return immediately
+  if (!activeDashboardPromise) {
+    activeDashboardPromise = (async () => {
+      try {
+        const response = await fetchWithTimeout(`${sheetsUrl}?action=get_dashboard`, 30000);
+        if (response.ok) {
+          const data = await response.json();
+          if (data && !data.error) {
+            cachedDashboardData = {
+              orders:   Array.isArray(data.orders)   ? data.orders   : [],
+              expenses: Array.isArray(data.expenses) ? data.expenses : [],
+              income:   Array.isArray(data.income)   ? data.income   : []
+            };
+            lastDashboardFetchTime = Date.now();
+          }
+        }
+      } catch (err) {
+        console.warn('⚠️ Warmup refresh failed:', err.message);
+      } finally {
+        activeDashboardPromise = null;
+      }
+    })();
+  }
+
+  res.json({ ok: true, cached: false, refreshing: true });
+});
+
+
 app.get('/panel-:slug', (req, res) => {
   if (req.params.slug !== getAdminSlug()) {
     return res.status(404).sendFile(path.join(__dirname, 'public', 'index.html'));
@@ -724,4 +807,29 @@ app.listen(PORT, () => {
   const slug = getAdminSlug();
   console.log(`✅ Zentrix server running on http://localhost:${PORT}`);
   console.log(`🔐 Admin panel: http://localhost:${PORT}/panel-${slug}`);
+
+  // Warm up Google Apps Script on startup to prevent cold-start delays
+  const settings = getSettings();
+  const sheetsUrl = settings.google_sheets_url;
+  if (sheetsUrl) {
+    setTimeout(() => {
+      console.log('🔥 Warming up Google Apps Script...');
+      fetchWithTimeout(`${sheetsUrl}?action=get_dashboard`, 30000)
+        .then(async res => {
+          if (res.ok) {
+            const data = await res.json();
+            if (data && !data.error) {
+              cachedDashboardData = {
+                orders:   Array.isArray(data.orders)   ? data.orders   : [],
+                expenses: Array.isArray(data.expenses) ? data.expenses : [],
+                income:   Array.isArray(data.income)   ? data.income   : []
+              };
+              lastDashboardFetchTime = Date.now();
+              console.log(`✅ Warm-up complete — ${cachedDashboardData.orders.length} orders cached`);
+            }
+          }
+        })
+        .catch(err => console.warn('⚠️ Warm-up ping failed (non-critical):', err.message));
+    }, 2000); // slight delay so server is fully ready first
+  }
 });
