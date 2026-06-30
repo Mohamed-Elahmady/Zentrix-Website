@@ -411,38 +411,81 @@ function updateDashboardUI() {
     if (profitSvg) profitSvg.innerHTML = '<use href="#ai-trending-down" stroke="currentColor"/>';
   }
   
+async function updateOrderStatus(orderId, newStatus) {
+  // Optimistic: update local state + UI immediately
+  const order = ordersList.find(o => o.order_id === orderId);
+  const prevStatus = order ? order.status : null;
+  if (order) {
+    order.status = newStatus;
+    updateDashboardUI();
+  }
+
+  try {
+    const res = await fetch(`/api/admin/orders/${orderId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken },
+      body: JSON.stringify({ status: newStatus })
+    });
+    if (res.ok) {
+      showToast('تم تحديث الحالة ✓');
+    } else {
+      if (order) { order.status = prevStatus; updateDashboardUI(); }
+      showToast('حدث خطأ أثناء تحديث الحالة', true);
+    }
+  } catch(e) {
+    if (order) { order.status = prevStatus; updateDashboardUI(); }
+    showToast('حدث خطأ أثناء تحديث الحالة', true);
+  }
+}
+
   // 2. Render orders table
   document.getElementById('orders-count').textContent = ordersList.length + ' طلب';
   const ordersTbody = document.getElementById('ordersTableBody');
   if (ordersList.length === 0) {
-    ordersTbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--grey); padding: 30px;">لا توجد طلبات مسجلة بعد</td></tr>`;
+    ordersTbody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: var(--grey); padding: 30px;">لا توجد طلبات مسجلة بعد</td></tr>`;
   } else {
+    const statusColors = {
+      Confirmed: { bg: 'rgba(45,140,240,.15)', color: '#5b9bd5' },
+      Shipped:   { bg: 'rgba(201,168,76,.15)', color: '#c9a84c' },
+      Delivered: { bg: 'rgba(39,174,96,.15)',  color: '#2ecc71' }
+    };
     ordersTbody.innerHTML = ordersList.map(o => {
+      const sc = statusColors[o.status] || statusColors.Confirmed;
+      const flashBadge = o.flash_size
+        ? `<span style="font-size:.7rem;background:rgba(124,58,237,.15);color:#a78bfa;border-radius:4px;padding:1px 6px;margin-top:3px;display:inline-block;">${o.flash_size.toUpperCase()}${o.is_personal_flash ? ' · شخصية' : ''}</span>`
+        : '';
       return `
         <tr>
           <td style="font-family: monospace; font-weight: bold; color: var(--gold);">${o.order_id}</td>
-          <td style="font-size: 0.8rem; color: var(--grey);">${o.timestamp}</td>
+          <td style="font-size: 0.78rem; color: var(--grey);">${o.timestamp}</td>
           <td>
             <div style="font-weight: 500;">${o.name}</div>
-            <div style="font-size: 0.75rem; color: var(--grey); margin-top:2px;">
+            <div style="font-size: 0.75rem; margin-top:2px;">
               <a href="https://wa.me/${o.whatsapp}" target="_blank" style="color: var(--success); text-decoration: none; display:inline-flex; align-items:center; gap:4px;"><svg width='12' height='12'><use href='#ai-chat' stroke='currentColor'/></svg>${o.phone}</a>
             </div>
           </td>
           <td>${o.governorate} — ${o.city}<div style="font-size:0.75rem; color: var(--grey); margin-top:2px;">${o.address}</div></td>
           <td>
             <span style="font-weight: 500;">${o.product}</span>
-            ${o.flash_size ? `<span style="font-size: 0.75rem; color: var(--purple-light); display:block; margin-top:2px;">(${o.flash_size})</span>` : ''}
+            ${flashBadge}
           </td>
           <td style="font-weight: bold; color: var(--white);">EGP ${Number(o.total || 0).toLocaleString('en-US')}</td>
           <td style="text-align: center;">
             <input type="checkbox" class="admin-checkbox" ${o.shipping_paid ? 'checked' : ''} onchange="toggleOrderPayment('${o.order_id}', 'shipping_paid', this.checked)">
-            <div style="font-size:0.65rem; margin-top:3px; color: var(--gold);">Instapay ✓</div>
+            <div style="font-size:0.65rem; margin-top:3px; color: var(--gold);">شحن</div>
           </td>
           <td style="text-align: center;">
             <input type="checkbox" class="admin-checkbox" ${o.product_paid ? 'checked' : ''} onchange="toggleOrderPayment('${o.order_id}', 'product_paid', this.checked)">
-            <div style="font-size:0.65rem; margin-top:3px; color: ${o.payment === 'instapay' ? 'var(--gold)' : 'var(--grey)'};">
-              ${o.payment === 'instapay' ? 'Instapay ✓' : 'كاش عند التسليم'}
-            </div>
+            <div style="font-size:0.65rem; margin-top:3px; color: ${o.payment === 'instapay' ? 'var(--gold)' : 'var(--grey)'};">${o.payment === 'instapay' ? 'Instapay' : 'كاش'}</div>
+          </td>
+          <td style="text-align: center; min-width:115px;">
+            <select onchange="updateOrderStatus('${o.order_id}', this.value)"
+              style="background:${sc.bg};color:${sc.color};border:1px solid ${sc.color}44;border-radius:6px;padding:3px 8px;font-size:.75rem;font-family:Tajawal,sans-serif;cursor:pointer;outline:none;font-weight:600;">
+              <option value="Confirmed" ${o.status === 'Confirmed' ? 'selected' : ''}>Confirmed</option>
+              <option value="Shipped"   ${o.status === 'Shipped'   ? 'selected' : ''}>Shipped</option>
+              <option value="Delivered" ${o.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
+            </select>
+            <button class="btn-action" onclick="deleteOrder('${o.order_id}')" style="margin-top:4px;display:block;width:100%;">حذف</button>
           </td>
         </tr>
       `;
@@ -578,23 +621,118 @@ async function toggleOrderPayment(orderId, type, checked) {
   }
 }
 
+// ── PENDING DELETE TRACKER ────────────────────────────────────────────────────
+// Key → { timer, data, idx }
+// Allows the user to undo a delete within 4 seconds before the API call fires.
+const pendingDeletes = {};
+
 async function deleteOrder(orderId) {
-  if (!confirm(`هل أنت متأكد من حذف الطلب ${orderId}؟`)) return;
-  try {
-    const res = await fetch(`/api/admin/orders/${orderId}`, {
-      method: 'DELETE',
-      headers: { 'x-admin-token': adminToken }
-    });
-    if (res.ok) {
-      ordersList = ordersList.filter(o => o.order_id !== orderId);
-      updateDashboardUI();
-      showToast('تم حذف الطلب بنجاح');
-    } else {
-      showToast('حدث خطأ أثناء الحذف', true);
-    }
-  } catch(e) {
-    showToast('حدث خطأ أثناء الحذف', true);
+  const idx = ordersList.findIndex(o => o.order_id === orderId);
+  if (idx === -1) return;
+  const order = ordersList[idx];
+
+  // Optimistic: remove immediately from local state
+  ordersList.splice(idx, 1);
+  updateDashboardUI();
+
+  // Cancel any already-pending delete for this id (edge case: double-click)
+  if (pendingDeletes[orderId]) clearTimeout(pendingDeletes[orderId].timer);
+
+  const toast = document.getElementById('toast');
+  toast.innerHTML = `<span style="display:flex;align-items:center;gap:10px;">
+    <svg width="14" height="14" style="flex-shrink:0"><use href="#ai-check" stroke="white"/></svg>
+    حُذف الطلب ${orderId}
+    <button onclick="undoDelete('orders','${orderId}')" style="background:rgba(255,255,255,.2);border:none;color:white;padding:2px 10px;border-radius:6px;cursor:pointer;font-size:.8rem;font-family:Tajawal,sans-serif;">تراجع ↺</button>
+  </span>`;
+  toast.className = 'toast show';
+
+  pendingDeletes[orderId] = {
+    type: 'orders', data: order, idx,
+    timer: setTimeout(async () => {
+      delete pendingDeletes[orderId];
+      toast.className = 'toast';
+      try {
+        await fetch(`/api/admin/orders/${orderId}`, { method: 'DELETE', headers: { 'x-admin-token': adminToken } });
+      } catch(e) { showToast('فشل حذف الطلب — أعد المحاولة', true); }
+    }, 4000)
+  };
+}
+
+async function deleteExpense(id) {
+  const idx = expensesList.findIndex(e => String(e.id) === String(id));
+  if (idx === -1) return;
+  const expense = expensesList[idx];
+
+  expensesList.splice(idx, 1);
+  updateDashboardUI();
+
+  if (pendingDeletes['exp-' + id]) clearTimeout(pendingDeletes['exp-' + id].timer);
+
+  const toast = document.getElementById('toast');
+  toast.innerHTML = `<span style="display:flex;align-items:center;gap:10px;">
+    <svg width="14" height="14" style="flex-shrink:0"><use href="#ai-check" stroke="white"/></svg>
+    حُذف المصروف
+    <button onclick="undoDelete('expenses','${id}')" style="background:rgba(255,255,255,.2);border:none;color:white;padding:2px 10px;border-radius:6px;cursor:pointer;font-size:.8rem;font-family:Tajawal,sans-serif;">تراجع ↺</button>
+  </span>`;
+  toast.className = 'toast show';
+
+  pendingDeletes['exp-' + id] = {
+    type: 'expenses', data: expense, idx,
+    timer: setTimeout(async () => {
+      delete pendingDeletes['exp-' + id];
+      toast.className = 'toast';
+      try {
+        await fetch(`/api/admin/expenses/${id}`, { method: 'DELETE', headers: { 'x-admin-token': adminToken } });
+      } catch(e) { showToast('فشل الحذف — أعد المحاولة', true); }
+    }, 4000)
+  };
+}
+
+async function deleteIncome(id) {
+  const idx = incomeList.findIndex(i => String(i.id) === String(id));
+  if (idx === -1) return;
+  const income = incomeList[idx];
+
+  incomeList.splice(idx, 1);
+  updateDashboardUI();
+
+  if (pendingDeletes['inc-' + id]) clearTimeout(pendingDeletes['inc-' + id].timer);
+
+  const toast = document.getElementById('toast');
+  toast.innerHTML = `<span style="display:flex;align-items:center;gap:10px;">
+    <svg width="14" height="14" style="flex-shrink:0"><use href="#ai-check" stroke="white"/></svg>
+    حُذف الإيراد
+    <button onclick="undoDelete('income','${id}')" style="background:rgba(255,255,255,.2);border:none;color:white;padding:2px 10px;border-radius:6px;cursor:pointer;font-size:.8rem;font-family:Tajawal,sans-serif;">تراجع ↺</button>
+  </span>`;
+  toast.className = 'toast show';
+
+  pendingDeletes['inc-' + id] = {
+    type: 'income', data: income, idx,
+    timer: setTimeout(async () => {
+      delete pendingDeletes['inc-' + id];
+      toast.className = 'toast';
+      try {
+        await fetch(`/api/admin/income/${id}`, { method: 'DELETE', headers: { 'x-admin-token': adminToken } });
+      } catch(e) { showToast('فشل الحذف — أعد المحاولة', true); }
+    }, 4000)
+  };
+}
+
+function undoDelete(type, id) {
+  const key = type === 'orders' ? id : (type === 'expenses' ? 'exp-' + id : 'inc-' + id);
+  const pending = pendingDeletes[key];
+  if (!pending) return;
+  clearTimeout(pending.timer);
+  delete pendingDeletes[key];
+  if (type === 'orders') {
+    ordersList.splice(Math.min(pending.idx, ordersList.length), 0, pending.data);
+  } else if (type === 'expenses') {
+    expensesList.splice(Math.min(pending.idx, expensesList.length), 0, pending.data);
+  } else {
+    incomeList.splice(Math.min(pending.idx, incomeList.length), 0, pending.data);
   }
+  updateDashboardUI();
+  showToast('تم الاستعادة ✓');
 }
 
 async function addExpense() {
@@ -673,46 +811,6 @@ async function addIncome() {
     }
   } catch(e) {
     showToast('حدث خطأ أثناء الإضافة', true);
-  }
-}
-
-async function deleteExpense(id) {
-  if (!confirm('هل أنت متأكد من حذف هذا المصروف؟')) return;
-  try {
-    const res = await fetch(`/api/admin/expenses/${id}`, {
-      method: 'DELETE',
-      headers: { 'x-admin-token': adminToken }
-    });
-    if (res.ok) {
-      expensesList = expensesList.filter(e => String(e.id) !== String(id));
-      updateDashboardUI();
-      showToast('تم حذف المصروف بنجاح');
-    } else {
-      const data = await res.json().catch(() => ({}));
-      showToast(data.error || 'حدث خطأ أثناء الحذف', true);
-    }
-  } catch(e) {
-    showToast('حدث خطأ في الاتصال بالسيرفر', true);
-  }
-}
-
-async function deleteIncome(id) {
-  if (!confirm('هل أنت متأكد من حذف هذا الإيراد؟')) return;
-  try {
-    const res = await fetch(`/api/admin/income/${id}`, {
-      method: 'DELETE',
-      headers: { 'x-admin-token': adminToken }
-    });
-    if (res.ok) {
-      incomeList = incomeList.filter(i => String(i.id) !== String(id));
-      updateDashboardUI();
-      showToast('تم حذف الإيراد بنجاح');
-    } else {
-      const data = await res.json().catch(() => ({}));
-      showToast(data.error || 'حدث خطأ أثناء الحذف', true);
-    }
-  } catch(e) {
-    showToast('حدث خطأ في الاتصال بالسيرفر', true);
   }
 }
 

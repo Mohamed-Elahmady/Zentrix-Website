@@ -1,0 +1,27 @@
+# ── Dependencies ────────────────────────────────────────────────────────────
+node_modules/
+
+# ── Sensitive data / local state ─────────────────────────────────────────────
+# These files contain admin passwords, WhatsApp numbers, Google Sheets URLs,
+# and real order/financial data.  Never commit them.
+data/orders.json
+data/expenses.json
+data/income.json
+data/settings.json
+
+# ── Backup archives (don't accidentally expose source code) ──────────────────
+public/*.zip
+*.zip
+*.bak
+
+# ── macOS junk ────────────────────────────────────────────────────────────────
+.DS_Store
+**/.DS_Store
+
+# ── Logs ─────────────────────────────────────────────────────────────────────
+*.log
+npm-debug.log*
+
+# ── Environment ──────────────────────────────────────────────────────────────
+.env
+.env.*

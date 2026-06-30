@@ -112,9 +112,9 @@
     "السويس": 70,
     "دمياط": 70
   },
-  "whatsapp_number": "201556018222",
-  "instapay_link": "https://ipn.eg/S/mohammed.elahmady/instapay/1soctd",
-  "admin_password": "jB_qA9wjrIKrijqzzzXQsg",
-  "google_sheets_url": "https://script.google.com/macros/s/AKfycbzhZ1hwg4NdvnEkv2meaFUL-qElEbPtxQPZau7DFMWZYoYmh1vrep2GfRARkymG7Qa0qg/exec",
+  "whatsapp_number": "201XXXXXXXXX",
+  "instapay_link": "https://ipn.eg/S/YOUR_HANDLE/instapay/YOUR_ID",
+  "admin_password": "CHANGE_ME_BEFORE_DEPLOY",
+  "google_sheets_url": "https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec",
   "admin_slug": "mysecretsection"
 }

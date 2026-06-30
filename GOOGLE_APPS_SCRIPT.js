@@ -21,23 +21,25 @@ function doGet(e) {
           const row = ordersValues[i];
           if (!row[0]) continue;
           orders.push({
-            order_id:      row[0]  || '',
-            timestamp:     row[1]  || '',
-            name:          row[2]  || '',
-            phone:         row[3]  || '',
-            whatsapp:      row[4]  || '',
-            product:       row[5]  || '',
-            product_price: Number(row[6]  || 0),
-            shipping_cost: Number(row[7]  || 0),
-            total:         Number(row[8]  || 0),
-            payment:       String(row[9]  || '').toLowerCase(),
-            governorate:   row[10] || '',
-            city:          row[11] || '',
-            address:       row[12] || '',
-            shipping_paid: row[13] === true || row[13] === 'true',
-            product_paid:  row[14] === true || row[14] === 'true',
-            status:        row[15] || 'Confirmed',
-            flash_type:    row[16] || 'New'
+            order_id:        row[0]  || '',
+            timestamp:       row[1]  || '',
+            name:            row[2]  || '',
+            phone:           row[3]  || '',
+            whatsapp:        row[4]  || '',
+            product:         row[5]  || '',
+            product_price:   Number(row[6]  || 0),
+            shipping_cost:   Number(row[7]  || 0),
+            total:           Number(row[8]  || 0),
+            payment:         String(row[9]  || '').toLowerCase(),
+            governorate:     row[10] || '',
+            city:            row[11] || '',
+            address:         row[12] || '',
+            shipping_paid:   row[13] === true || row[13] === 'true',
+            product_paid:    row[14] === true || row[14] === 'true',
+            status:          row[15] || 'Confirmed',
+            flash_type:      row[16] || 'New',
+            flash_size:      row[17] || '',
+            is_personal_flash: row[18] === true || row[18] === 'true'
           });
         }
         orders.reverse();
@@ -159,23 +161,25 @@ function doGet(e) {
       if (!row[0]) continue; // Skip empty rows
       
       const order = {
-        order_id:      row[0]  || '',
-        timestamp:     row[1]  || '',
-        name:          row[2]  || '',
-        phone:         row[3]  || '',
-        whatsapp:      row[4]  || '',
-        product:       row[5]  || '',
-        product_price: Number(row[6]  || 0),
-        shipping_cost: Number(row[7]  || 0),
-        total:         Number(row[8]  || 0),
-        payment:       String(row[9]  || '').toLowerCase(),
-        governorate:   row[10] || '',
-        city:          row[11] || '',
-        address:       row[12] || '',
-        shipping_paid: row[13] === true || row[13] === 'true',
-        product_paid:  row[14] === true || row[14] === 'true',
-        status:        row[15] || 'Confirmed',
-        flash_type:    row[16] || 'New'
+        order_id:        row[0]  || '',
+        timestamp:       row[1]  || '',
+        name:            row[2]  || '',
+        phone:           row[3]  || '',
+        whatsapp:        row[4]  || '',
+        product:         row[5]  || '',
+        product_price:   Number(row[6]  || 0),
+        shipping_cost:   Number(row[7]  || 0),
+        total:           Number(row[8]  || 0),
+        payment:         String(row[9]  || '').toLowerCase(),
+        governorate:     row[10] || '',
+        city:            row[11] || '',
+        address:         row[12] || '',
+        shipping_paid:   row[13] === true || row[13] === 'true',
+        product_paid:    row[14] === true || row[14] === 'true',
+        status:          row[15] || 'Confirmed',
+        flash_type:      row[16] || 'New',
+        flash_size:      row[17] || '',
+        is_personal_flash: row[18] === true || row[18] === 'true'
       };
       orders.push(order);
     }
@@ -342,7 +346,8 @@ function doPost(e) {
       'Order ID', 'Timestamp', 'Name', 'Phone', 'WhatsApp',
       'Product', 'Product Price', 'Shipping Cost', 'Total',
       'Payment', 'Governorate', 'City', 'Address',
-      'Shipping Paid', 'Product Paid', 'Status', 'Flash Type'
+      'Shipping Paid', 'Product Paid', 'Status', 'Flash Type',
+      'Flash Size', 'Personal Flash'
     ]);
 
     const row = [
@@ -362,7 +367,9 @@ function doPost(e) {
       false,   // shipping_paid
       false,   // product_paid
       data.status          || 'Confirmed',
-      data.flash_type      || 'New'
+      data.flash_type      || 'New',
+      data.flash_size      || '',           // col 18 — e.g. "32gb" for custom orders
+      data.is_personal_flash ? true : false // col 19 — true when customer sends own flash
     ];
 
     sheet.appendRow(row);
@@ -378,6 +385,8 @@ function doPost(e) {
     // Checkboxes for paid columns
     sheet.getRange(lastRow, 14).insertCheckboxes();
     sheet.getRange(lastRow, 15).insertCheckboxes();
+    // Checkbox for personal flash flag
+    sheet.getRange(lastRow, 19).insertCheckboxes();
 
     // Status dropdown
     const statusRule = SpreadsheetApp.newDataValidation()
@@ -462,7 +471,8 @@ function fixHeaders() {
     'Order ID', 'Timestamp', 'Name', 'Phone', 'WhatsApp',
     'Product', 'Product Price', 'Shipping Cost', 'Total',
     'Payment', 'Governorate', 'City', 'Address',
-    'Shipping Paid', 'Product Paid', 'Status', 'Flash Type'
+    'Shipping Paid', 'Product Paid', 'Status', 'Flash Type',
+    'Flash Size', 'Personal Flash'
   ];
   sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
 
